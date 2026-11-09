@@ -32,6 +32,7 @@ import { BillingService } from './billing/billing.service';
 import { BillingWebhookController, CompanyBillingController, PlatformBillingController } from './billing/billing.controller';
 import { ExportController } from './billing/export.controller';
 import { PAYMENT_PROVIDER, PaymentProvider, SimulatedProvider } from './billing/provider';
+import { DashboardController } from './modules/dashboard.controller';
 import { TenantGuard } from './tenancy/tenant.guard';
 
 @Module({})
@@ -45,7 +46,7 @@ export class AppModule {
         RiskMatricesController, TemplatesController, AprsController, PhotosController,
         PeopleController, PtTypesController, WorkPermitsController,
         DocumentsController, VerifyController, RetentionController,
-        PlatformBillingController, BillingWebhookController, CompanyBillingController, ExportController, ...(dev ? [DevLoginController] : [])],
+        PlatformBillingController, BillingWebhookController, CompanyBillingController, ExportController, DashboardController, ...(dev ? [DevLoginController] : [])],
       providers: [
         { provide: APP_CONFIG, useValue: config },
         ...(dev ? [{ provide: DEV_SIGNER, useValue: dev }] : []),

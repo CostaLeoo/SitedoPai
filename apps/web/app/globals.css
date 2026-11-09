@@ -6,26 +6,37 @@
  * Cores de estado nunca são o único sinal: há sempre texto junto.
  */
 @theme {
-  --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  --color-ink: #111827;
-  --color-muted: #4b5563;
-  --color-line: #d1d5db;
+  --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  /* Identidade inspirada no Vigia: azul profundo, verde para ação e informação
+     positiva, âmbar para pendência, vermelho para impedimento. */
+  --color-ink: #18343f;
+  --color-muted: #5f7079;
+  --color-line: #e0e7e8;
   --color-surface: #ffffff;
-  --color-canvas: #f3f4f6;
-  --color-brand: #1d4ed8;
-  --color-brand-ink: #1e3a8a;
-  --color-ok: #166534;
-  --color-ok-bg: #dcfce7;
-  --color-warn: #92400e;
-  --color-warn-bg: #fef3c7;
-  --color-danger: #991b1b;
-  --color-danger-bg: #fee2e2;
+  --color-canvas: #f4f7f8;
+  --color-brand: #237252;
+  --color-brand-ink: #195c42;
+  --color-navy: #122e3a;
+  --color-navy-2: #1b3a46;
+  --color-navy-hover: #24414d;
+  --color-navy-active: #2b4e55;
+  --color-navy-text: #c9d7de;
+  --color-mint: #a7e6bc;
+  --color-ok: #296241;
+  --color-ok-bg: #e6f3e9;
+  --color-warn: #825500;
+  --color-warn-bg: #fff3db;
+  --color-danger: #95402b;
+  --color-danger-bg: #fcebe4;
+  --color-focus: #4686d2;
+  --color-info: #3c5866;
+  --color-info-bg: #edf3f6;
 }
 
 html { -webkit-text-size-adjust: 100%; }
 body { background: var(--color-canvas); color: var(--color-ink); font-size: 1.0625rem; line-height: 1.5; }
 
-:focus-visible { outline: 3px solid var(--color-brand); outline-offset: 2px; }
+:focus-visible { outline: 3px solid var(--color-focus); outline-offset: 2px; }
 
 @media (prefers-reduced-motion: reduce) {
   * { transition: none !important; animation: none !important; }

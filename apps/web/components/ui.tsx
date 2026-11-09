@@ -94,7 +94,7 @@ export function Select(props: {
 
 type Tone = 'info' | 'ok' | 'warn' | 'danger';
 const tones: Record<Tone, string> = {
-  info: 'bg-blue-50 border-brand text-brand-ink',
+  info: 'bg-info-bg border-info text-info',
   ok: 'bg-ok-bg border-ok text-ok',
   warn: 'bg-warn-bg border-warn text-warn',
   danger: 'bg-danger-bg border-danger text-danger',
@@ -122,6 +122,6 @@ export const STATUS_LABEL: Record<string, string> = {
 };
 
 export function StatusBadge({ status }: { status: string }) {
-  const tone = status === 'APPROVED' ? 'bg-ok-bg text-ok' : status === 'CANCELLED' ? 'bg-gray-200 text-ink' : status === 'RETURNED' ? 'bg-warn-bg text-warn' : 'bg-blue-50 text-brand-ink';
+  const tone = status === 'APPROVED' ? 'bg-ok-bg text-ok' : status === 'CANCELLED' ? 'bg-gray-200 text-ink' : status === 'RETURNED' ? 'bg-warn-bg text-warn' : 'bg-info-bg text-info';
   return <span className={`inline-block rounded-full px-3 py-1 text-sm font-bold ${tone}`}>{STATUS_LABEL[status] ?? status}</span>;
 }

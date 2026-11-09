@@ -36,3 +36,12 @@ it('lista de APRs pagina por cursor sem perder nem repetir itens', async () => {
   expect(seen).toHaveLength(250);
   expect(new Set(seen).size).toBe(250);
 });
+
+it('visão geral traz contagens reais por situação, no escopo da pessoa', async () => {
+  const auth = `Bearer ${await token({ sub: 'sub-adminB' })}`;
+  const d = (await http.get('/dashboard').set('Authorization', auth).set('X-Tenant-Id', w.ids.beta!).expect(200)).body;
+  expect(d.aprs).toEqual({ DRAFT: 249, APPROVED: 1 });
+  expect(d.pts).toEqual({ DRAFT: 1 });
+  expect(d.ptsValidNow).toBe(0);
+  expect(d.recent.length).toBeLessThanOrEqual(8);
+});
