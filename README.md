@@ -31,29 +31,31 @@ docs              Especificação, modelo de dados, decisões (ADRs)
 
 ## Como rodar localmente
 
-Requisitos: Node 22, pnpm 10, Docker (ou um PostgreSQL 16 local).
+Requisitos: Node 22, pnpm 10 e Docker (ou um PostgreSQL 16 instalado).
 
 ```bash
 pnpm install
-cp .env.example .env
-docker compose up -d                                   # Postgres, Redis, MinIO, Keycloak
-PGHOST=localhost PGUSER=postgres PGPASSWORD=postgres pnpm db:setup   # banco + papéis
-pnpm db:migrate                                        # aplica migrations/*.sql
-pnpm db:seed                                           # dados fictícios de demonstração
-pnpm dev                                               # API em http://localhost:3001
+cp .env.example .env                    # no Windows: copy .env.example .env
 cp apps/web/.env.example apps/web/.env.local
-pnpm --filter @sitedopai/web dev                       # site em http://localhost:3000
+docker compose up -d postgres           # só o banco; o Keycloak não é necessário no modo de teste
+PGHOST=localhost PGUSER=postgres PGPASSWORD=postgres pnpm db:setup
+pnpm db:migrate
+pnpm db:seed                            # dados fictícios
+pnpm dev                                # API em http://localhost:3001
+# em outro terminal:
+pnpm --filter @sitedopai/web dev        # site em http://localhost:3000
 ```
 
-Usuários de demonstração no Keycloak (http://localhost:8080, realm `sitedopai`):
-`admin@`, `sst@`, `supervisor@`, `executante@` e `plataforma@sitedopai.local`,
-senha inicial `Troque-esta-senha-1` (o Keycloak pede a troca e, para perfis
-privilegiados, o cadastro do segundo fator).
+### Login de teste (sem Keycloak)
 
-> O `docker-compose.yml` e o realm do Keycloak não foram executados no ambiente
-> em que esta fase foi construída (sem Docker). Banco, migrações, seed e API
-> foram testados com PostgreSQL 16 local.
+Com `AUTH_MODE=dev` (API) e `NEXT_PUBLIC_AUTH_MODE=dev` (site), já definidos nos
+`.env.example`, a tela de entrada mostra a lista de usuários fictícios do seed:
+basta escolher um. Não há senha nem verificação em duas etapas; a API emite o
+token com uma chave gerada a cada inicialização.
 
+- A API **se recusa a iniciar** com `AUTH_MODE=dev` e `NODE_ENV=production` (teste automatizado).
+- Só aceita e-mails `@sitedopai.local`.
+- Para usar o Keycloak, troque para `AUTH_MODE=oidc`, remova `NEXT_PUBLIC_AUTH_MODE` e rode `docker compose up -d`.
 ## Testes
 
 ```bash

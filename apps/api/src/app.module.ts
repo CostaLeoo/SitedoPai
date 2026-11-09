@@ -24,20 +24,22 @@ import { PtTypesController } from './modules/pt-types.controller';
 import { WorkPermitsController } from './modules/work-permits.controller';
 import { PtService } from './pt/pt.service';
 import { LocalStorage, OBJECT_STORAGE, ObjectStorage, S3Storage } from './storage/storage';
+import { DEV_SIGNER, DevLoginController, DevSigner } from './auth/dev-login';
 import { TenantGuard } from './tenancy/tenant.guard';
 
 @Module({})
 export class AppModule {
   /** `keys` permite aos testes usar chaves locais no lugar do Keycloak. */
-  static forRoot(config: AppConfig, keys?: JWTVerifyGetKey, storage?: ObjectStorage): DynamicModule {
+  static forRoot(config: AppConfig, keys?: JWTVerifyGetKey, storage?: ObjectStorage, dev?: DevSigner): DynamicModule {
     return {
       module: AppModule,
       imports: [ThrottlerModule.forRoot([{ ttl: 60_000, limit: config.RATE_LIMIT_PER_MINUTE }])],
       controllers: [SessionController, UnitsController, MembershipsController, AuditController, PlatformController,
         RiskMatricesController, TemplatesController, AprsController, PhotosController,
-        PeopleController, PtTypesController, WorkPermitsController],
+        PeopleController, PtTypesController, WorkPermitsController, ...(dev ? [DevLoginController] : [])],
       providers: [
         { provide: APP_CONFIG, useValue: config },
+        ...(dev ? [{ provide: DEV_SIGNER, useValue: dev }] : []),
         { provide: TOKEN_KEYS, useValue: keys ?? remoteKeys(config) },
         { provide: OBJECT_STORAGE, useValue: storage ?? createStorage(config) },
         DbService,

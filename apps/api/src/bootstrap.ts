@@ -1,3 +1,4 @@
+import { createDevSigner, DevSigner } from './auth/dev-login';
 import 'reflect-metadata';
 import { INestApplication } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
@@ -9,7 +10,13 @@ import type { AppConfig } from './config';
 import type { ObjectStorage } from './storage/storage';
 
 export async function createApp(config: AppConfig, keys?: JWTVerifyGetKey, logger = true, storage?: ObjectStorage): Promise<INestApplication> {
-  const app = await NestFactory.create<NestExpressApplication>(AppModule.forRoot(config, keys, storage), {
+  let dev: DevSigner | undefined;
+  if (config.AUTH_MODE === 'dev' && !keys) {
+    dev = await createDevSigner(config);
+    keys = dev.keys;
+    console.warn('ATENÇÃO: login de teste ativo (AUTH_MODE=dev). Não use em produção.');
+  }
+  const app = await NestFactory.create<NestExpressApplication>(AppModule.forRoot(config, keys, storage, dev), {
     logger: logger ? ['error', 'warn', 'log'] : false,
   });
   app.use(helmet({ crossOriginResourcePolicy: { policy: config.corsOrigins.length ? 'cross-origin' : 'same-origin' } }));
