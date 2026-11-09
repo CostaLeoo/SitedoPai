@@ -104,3 +104,37 @@ sem controle ou sem risco residual; risco residual em classe não aceitável.
 
 Divergência com efeito "alerta" e risco residual maior que o inicial geram avisos,
 sem bloquear. O sistema nunca aprova sozinho: a verificação só impede o avanço.
+
+---
+
+# Fase 3a — Permissão de Trabalho
+
+| Tabela | Finalidade | Regras no banco |
+| --- | --- | --- |
+| `workers` | Trabalhador próprio ou de terceiro; `user_id` opcional (obrigatório para assinar) | Usuário vinculado precisa ter vínculo com a mesma empresa |
+| `qualification_types` | Treinamento, designação formal, aptidão, outros | — |
+| `worker_qualifications` | Qualificação com início e validade | Nunca apagada nem alterada; só revogada, uma vez |
+| `pt_types` / `pt_type_requirements` | Configuração do SST: validade máxima, checklist (modelo publicado), parâmetros atmosféricos e limites, idade máxima da medição, controle de entradas, designação de quem libera, segregação criador/liberador; funções obrigatórias e qualificações por função | Publicar exige outra pessoa e validação profissional; publicado é imutável |
+| `work_permits` | PT vinculada a uma APR aprovada | Máquina de estados no banco; dados só mudam em rascunho/correção; nunca apagada |
+| `pt_team` | Equipe por função, com a assinatura de ciência | Só muda em rascunho/correção; ciência registrada após a liberação |
+| `pt_answers` | Checklist da PT (mesmas regras de Sim/Não/N/A da APR) | Só muda em edição/análise |
+| `pt_measurements` | Medições com instrumento e situação em relação aos limites | Só inserção |
+| `pt_entries` | Entradas e saídas (espaço confinado) | Entrada só com PT em execução válida e pessoa da equipe com ciência; **saída aceita em qualquer situação**, uma vez |
+| `document_snapshots` / `signatures` | Conteúdo exato assinado (JSON canônico) e assinatura com evidências da autenticação | Hash conferido pelo banco; só inserção |
+
+## Estados
+
+`DRAFT → IN_ANALYSIS → AWAITING_APPROVAL → RELEASED → IN_EXECUTION → CLOSED`,
+com `AWAITING_CORRECTION`, `REJECTED`, `CANCELLED`, `SUSPENDED` (retomada volta a
+`RELEASED` com nova assinatura e nova ciência de toda a equipe) e `EXPIRED`
+(aplicada em cada acesso, sem depender de rotina externa). A rota
+`/work-permits/:id/validity` responde se a PT vale como autorização **agora**.
+
+## Assinatura eletrônica (decisão 1c, provisória)
+
+Assinatura avançada própria: pessoa autenticada no Keycloak, login recente
+(padrão 10 min) e, para liberar ou retomar, segundo fator. Guarda o hash
+SHA-256 do conteúdo assinado, o conteúdo em si, a data e hora do servidor e as
+evidências (método, `amr`, `auth_time`, sessão, IP, navegador). A verificação
+recalcula o hash e confirma que a PT não mudou desde a última liberação.
+ICP-Brasil (PAdES) entra quando o parecer jurídico definir onde é exigida.

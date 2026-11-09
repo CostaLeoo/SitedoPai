@@ -285,7 +285,87 @@ export interface AprPhotosTable {
   removed_by: string | null;
 }
 
+export type QualificationKind = 'TRAINING' | 'DESIGNATION' | 'FITNESS' | 'OTHER';
+export const TEAM_FUNCTIONS = ['RESPONSIBLE', 'EXECUTOR', 'ENTRY_SUPERVISOR', 'ATTENDANT', 'RESCUE'] as const;
+export type TeamFunction = (typeof TEAM_FUNCTIONS)[number];
+export type PtStatus = 'DRAFT' | 'IN_ANALYSIS' | 'AWAITING_CORRECTION' | 'AWAITING_APPROVAL' | 'RELEASED' | 'IN_EXECUTION'
+  | 'SUSPENDED' | 'CLOSED' | 'REJECTED' | 'CANCELLED' | 'EXPIRED';
+export interface GasParameter { key: string; label: string; unit: string; min?: number; max?: number }
+
+export interface WorkersTable {
+  id: Generated<string>; tenant_id: string; full_name: string; registration: string | null;
+  contractor_id: string | null; user_id: string | null; active: Generated<boolean>; created_at: Timestamp;
+}
+export interface QualificationTypesTable {
+  id: Generated<string>; tenant_id: string; name: string; kind: QualificationKind; normative_ref: string | null;
+  active: Generated<boolean>; created_at: Timestamp;
+}
+export interface WorkerQualificationsTable {
+  id: Generated<string>; tenant_id: string; worker_id: string; type_id: string;
+  valid_from: ColumnType<Date, string, string>; valid_until: ColumnType<Date | null, string | null | undefined, string | null>;
+  evidence: string | null; recorded_by: string; recorded_at: Timestamp;
+  revoked_at: NullableTimestamp; revoked_by: string | null; revoke_reason: string | null;
+}
+export interface PtTypesTable {
+  id: Generated<string>; tenant_id: string; name: string; version: Generated<number>; description: string | null;
+  status: Generated<PublishStatus>; checklist_template_version_id: string; max_validity_minutes: number;
+  requires_gas_monitoring: Generated<boolean>; gas_parameters: Json<GasParameter[]>; gas_max_age_minutes: number | null;
+  requires_entry_log: Generated<boolean>; releaser_qualification_type_id: string | null;
+  segregate_creator_releaser: Generated<boolean>; author_id: string; reviewed_by: string | null;
+  professional_validation: Json<ProfessionalValidation> | null; published_at: NullableTimestamp; created_at: Timestamp;
+}
+export interface PtTypeRequirementsTable {
+  id: Generated<string>; tenant_id: string; pt_type_id: string; function: TeamFunction; min_count: number;
+  qualification_type_ids: ColumnType<string[], string[] | undefined, string[]>;
+}
+export interface WorkPermitsTable {
+  id: Generated<string>; tenant_id: string; number: string; pt_type_id: string; apr_id: string; unit_id: string;
+  sector_id: string | null; location: string; description: string; starts_at: ColumnType<Date, Date | string, Date | string>;
+  ends_at: ColumnType<Date, Date | string, Date | string>; status: Generated<PtStatus>; row_version: Generated<number>;
+  created_by: string; submitted_at: NullableTimestamp; reviewed_by: string | null; reviewed_at: NullableTimestamp;
+  released_by: string | null; released_at: NullableTimestamp; suspended_at: NullableTimestamp; status_reason: string | null;
+  closed_by: string | null; closed_at: NullableTimestamp; closing_notes: string | null; created_at: Timestamp; updated_at: Timestamp;
+}
+export interface PtTeamTable {
+  id: Generated<string>; tenant_id: string; pt_id: string; worker_id: string; function: TeamFunction;
+  acknowledged_signature_id: string | null;
+}
+export interface PtAnswersTable {
+  id: Generated<string>; tenant_id: string; pt_id: string; question_id: string; answer: AnswerValue;
+  justification: string | null; corrective_action: string | null; answered_by: string; answered_at: Timestamp;
+  reassessed_answer: AnswerValue | null; reassessed_by: string | null; reassessed_at: NullableTimestamp; version: Generated<number>;
+}
+export interface PtMeasurementsTable {
+  id: Generated<string>; tenant_id: string; pt_id: string; parameter_key: string;
+  value: ColumnType<string, number, never>; unit: string; within_limits: boolean; instrument: string;
+  measured_by: string; received_at: Timestamp;
+}
+export interface PtEntriesTable {
+  id: Generated<string>; tenant_id: string; pt_id: string; worker_id: string; entered_at: Timestamp; entered_by: string;
+  exited_at: NullableTimestamp; exited_by: string | null;
+}
+export interface DocumentSnapshotsTable {
+  id: Generated<string>; tenant_id: string; document_type: string; document_id: string; content: string; hash: string; created_at: Timestamp;
+}
+export interface SignaturesTable {
+  id: Generated<string>; tenant_id: string; document_type: string; document_id: string; snapshot_id: string;
+  document_hash: string; meaning: string; signer_user_id: string; signer_name: string;
+  signer_context: Json<Record<string, unknown>>; evidence: Json<Record<string, unknown>>; signed_at: Timestamp;
+}
+
 export interface Database {
+  workers: WorkersTable;
+  qualification_types: QualificationTypesTable;
+  worker_qualifications: WorkerQualificationsTable;
+  pt_types: PtTypesTable;
+  pt_type_requirements: PtTypeRequirementsTable;
+  work_permits: WorkPermitsTable;
+  pt_team: PtTeamTable;
+  pt_answers: PtAnswersTable;
+  pt_measurements: PtMeasurementsTable;
+  pt_entries: PtEntriesTable;
+  document_snapshots: DocumentSnapshotsTable;
+  signatures: SignaturesTable;
   risk_matrices: RiskMatricesTable;
   apr_templates: AprTemplatesTable;
   apr_template_versions: AprTemplateVersionsTable;

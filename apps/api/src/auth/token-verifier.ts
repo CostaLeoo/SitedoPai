@@ -7,6 +7,10 @@ export interface VerifiedToken {
   email: string | null;
   emailVerified: boolean;
   amr: string[];
+  /** Momento do login (claim auth_time), em segundos. */
+  authTime: number | null;
+  sessionId: string | null;
+  tokenId: string | null;
 }
 
 export const TOKEN_KEYS = Symbol('TOKEN_KEYS');
@@ -39,6 +43,9 @@ export class TokenVerifier {
       email: typeof payload.email === 'string' ? payload.email : null,
       emailVerified: payload.email_verified === true,
       amr,
+      authTime: typeof payload.auth_time === 'number' ? payload.auth_time : null,
+      sessionId: typeof payload.sid === 'string' ? payload.sid : null,
+      tokenId: typeof payload.jti === 'string' ? payload.jti : null,
     };
   }
 }

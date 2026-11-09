@@ -41,6 +41,12 @@ export class AuthGuard implements CanActivate {
       userId,
       subject: token.subject,
       mfa: token.amr.some((v) => this.config.mfaAmrValues.includes(v)),
+      amr: token.amr,
+      authTime: token.authTime,
+      sessionId: token.sessionId,
+      tokenId: token.tokenId,
+      ip: req.ip ?? '',
+      userAgent: String(req.headers['user-agent'] ?? '').slice(0, 300),
     };
     return true;
   }

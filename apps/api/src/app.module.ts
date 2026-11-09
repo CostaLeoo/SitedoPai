@@ -18,6 +18,11 @@ import { PhotosController } from './modules/photos.controller';
 import { RiskMatricesController } from './modules/risk-matrices.controller';
 import { TemplatesController } from './modules/templates.controller';
 import { AprService } from './apr/apr.service';
+import { SignatureService } from './common/signature';
+import { PeopleController } from './modules/people.controller';
+import { PtTypesController } from './modules/pt-types.controller';
+import { WorkPermitsController } from './modules/work-permits.controller';
+import { PtService } from './pt/pt.service';
 import { LocalStorage, OBJECT_STORAGE, ObjectStorage, S3Storage } from './storage/storage';
 import { TenantGuard } from './tenancy/tenant.guard';
 
@@ -29,7 +34,8 @@ export class AppModule {
       module: AppModule,
       imports: [ThrottlerModule.forRoot([{ ttl: 60_000, limit: config.RATE_LIMIT_PER_MINUTE }])],
       controllers: [SessionController, UnitsController, MembershipsController, AuditController, PlatformController,
-        RiskMatricesController, TemplatesController, AprsController, PhotosController],
+        RiskMatricesController, TemplatesController, AprsController, PhotosController,
+        PeopleController, PtTypesController, WorkPermitsController],
       providers: [
         { provide: APP_CONFIG, useValue: config },
         { provide: TOKEN_KEYS, useValue: keys ?? remoteKeys(config) },
@@ -37,6 +43,8 @@ export class AppModule {
         DbService,
         TokenVerifier,
         AprService,
+        PtService,
+        SignatureService,
         // Ordem importa: limite de taxa → autenticação → empresa → permissão.
         { provide: APP_GUARD, useClass: ThrottlerGuard },
         { provide: APP_GUARD, useClass: AuthGuard },

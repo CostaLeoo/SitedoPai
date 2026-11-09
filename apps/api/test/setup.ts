@@ -25,6 +25,8 @@ export interface TokenOptions {
   audience?: string;
   expiresIn?: string | number;
   key?: 'valid' | 'other';
+  /** Há quantos segundos a pessoa fez login (claim auth_time). Padrão: agora. */
+  authAgeSeconds?: number;
 }
 
 export async function token(o: TokenOptions): Promise<string> {
@@ -32,6 +34,8 @@ export async function token(o: TokenOptions): Promise<string> {
     email: o.email,
     email_verified: o.emailVerified ?? true,
     amr: o.mfa === false ? ['pwd'] : ['pwd', 'otp'],
+    auth_time: Math.floor(Date.now() / 1000) - (o.authAgeSeconds ?? 0),
+    sid: 'sessao-teste',
   })
     .setProtectedHeader({ alg: 'RS256', kid: o.key === 'other' ? 'other' : 'k1' })
     .setSubject(o.sub)
@@ -90,6 +94,23 @@ async function seedBetaApr(owner: Db, ids: Record<string, string>) {
       mime_type: 'image/jpeg', size_bytes: 10, sha256: 'b'.repeat(64), uploaded_by: ids.adminB!,
     }).returning('id').executeTakeFirstOrThrow();
     Object.assign(ids, { matrixB: m.id, templateB: tp.id, versionB: v.id, questionB: q.id, aprB: apr.id, photoB: photo.id });
+
+    // PT da Beta (alvo da varredura entre empresas).
+    const qt = await tx.insertInto('qualification_types').values({ tenant_id: ids.beta!, name: 'Treinamento Beta', kind: 'TRAINING' }).returning('id').executeTakeFirstOrThrow();
+    const wk = await tx.insertInto('workers').values({ tenant_id: ids.beta!, full_name: 'Trabalhador Beta', user_id: ids.adminB! }).returning('id').executeTakeFirstOrThrow();
+    const wq = await tx.insertInto('worker_qualifications').values({ tenant_id: ids.beta!, worker_id: wk.id, type_id: qt.id, valid_from: '2026-01-01', valid_until: '2027-12-31', recorded_by: ids.adminB! })
+      .returning('id').executeTakeFirstOrThrow();
+    const ptt = await tx.insertInto('pt_types').values({
+      tenant_id: ids.beta!, name: 'PT Beta', checklist_template_version_id: v.id, max_validity_minutes: 480, author_id: ids.adminB!,
+      gas_parameters: '[]', status: 'PUBLISHED', reviewed_by: ids.adminC!, professional_validation: JSON.stringify({ name: 'x', registry: 'y', date: '2026-11-01' }),
+    }).returning('id').executeTakeFirstOrThrow();
+    await tx.updateTable('aprs').set({ status: 'IN_REVIEW' }).where('id', '=', apr.id).execute();
+    await tx.updateTable('aprs').set({ status: 'APPROVED', decided_by: ids.adminC! }).where('id', '=', apr.id).execute();
+    const pt = await tx.insertInto('work_permits').values({
+      tenant_id: ids.beta!, number: 'PT-2026-000001', pt_type_id: ptt.id, apr_id: apr.id, unit_id: ids.unitB1!, location: 'Tanque Beta',
+      description: 'Segredo da Beta', starts_at: new Date(), ends_at: new Date(Date.now() + 3600_000), created_by: ids.adminB!,
+    }).returning('id').executeTakeFirstOrThrow();
+    Object.assign(ids, { qualTypeB: qt.id, workerB: wk.id, workerQualB: wq.id, ptTypeB: ptt.id, ptB: pt.id });
   });
 }
 

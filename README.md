@@ -6,8 +6,8 @@ e Permissão de Trabalho (PT), destinada a empresas brasileiras.
 > Princípio fundamental: a segurança dos trabalhadores tem prioridade sobre a
 > velocidade de preenchimento e liberação.
 
-**Situação:** Fase 1 (Fundação) e Fase 2 (APR: backend e telas no celular)
-implementadas e testadas localmente. Não está pronto para produção (ver
+**Situação:** Fase 1 (Fundação), Fase 2 (APR: backend e telas) e Fase 3a
+(backend da Permissão de Trabalho) implementadas e testadas localmente. Não está pronto para produção (ver
 *Pendências*).
 
 ## Documentos
@@ -67,7 +67,9 @@ pnpm test
 | `apps/api/test/api.test.ts` | 38 | Tokens inválidos (assinatura, validade, emissor, público, `alg: none`), convite, MFA por perfil, permissões e escopo por unidade, empresa somente leitura, concorrência (409), área da plataforma |
 | `packages/db/test/apr-triggers.test.ts` | 7 | Travas da APR no banco: publicação com revisor e validação profissional, imutabilidade de modelo, matriz e APR aprovada, limite e preservação de fotos, numeração |
 | `apps/api/test/apr.test.ts` | 38 | Matriz, ciclo do modelo (revisão por outra pessoa), preenchimento, "Sim" que não é seguro, pergunta crítica com nova avaliação, fotos (arquivo disfarçado, imagem corrompida, HEIC, EXIF/GPS removido, original íntegro, limite com envios simultâneos), análise de riscos, envio, aprovação, devolução, cancelamento, revisão, histórico |
-| `apps/api/test/cross-tenant.test.ts` | 43 | Lê a lista real de rotas da API (45) e tenta ler, alterar e criar dados da empresa B como administrador e como SST da A. Rota nova sem caso de teste faz a suíte falhar |
+| `packages/db/test/pt-triggers.test.ts` | 6 | Travas da PT no banco: máquina de estados, dados congelados após envio, entradas só em execução e saída sempre, imutabilidade de medições, assinaturas e qualificações, hash do conteúdo assinado |
+| `apps/api/test/pt.test.ts` | 21 | Qualificações e trabalhadores, tipo de PT, APR aprovada obrigatória, validade máxima, funções e qualificações da equipe, análise, gases (ausente, fora do limite), liberação (papel, designação, MFA, login recente, segregação), ciência individual, entradas, suspensão automática por gás, retomada, encerramento, verificação de assinaturas, expiração |
+| `apps/api/test/cross-tenant.test.ts` | 79 | Lê a lista real de rotas da API (81) e tenta ler, alterar e criar dados da empresa B como administrador e como SST da A. Rota nova sem caso de teste faz a suíte falhar |
 
 ### Testes de ponta a ponta (site)
 
@@ -130,12 +132,42 @@ arquivo; a imagem é decodificada de verdade (arquivo disfarçado é recusado); 
 cópia de exibição é reduzida a 1600 px e regravada sem EXIF/GPS; o original fica
 intacto, com SHA-256, para prova. HEIC ainda não é aceito (a tela vai converter).
 
+## Permissão de Trabalho (Fase 3a)
+
+Nenhum valor normativo é fixo no código: validade máxima, parâmetros e limites
+de gases, idade máxima da medição, funções obrigatórias, qualificações por
+função e designação de quem libera são configurados pelo SST em cada **tipo de
+PT**, que só é publicado com revisão de outra pessoa e identificação do
+profissional que validou.
+
+| Rota | O que faz |
+| --- | --- |
+| `GET/POST /workers`, `PATCH /workers/:id` | Trabalhadores |
+| `GET/POST /qualification-types`, `GET/POST /workers/:id/qualifications`, `POST /worker-qualifications/:id/revoke` | Qualificações |
+| `GET/POST /pt-types`, `PUT /pt-types/:id`, `POST /pt-types/:id/publish` | Tipos de PT |
+| `GET/POST /work-permits`, `GET/PATCH /work-permits/:id`, `PUT …/team`, `PUT …/answers/:q`, `POST …/reassess` | Preparação |
+| `GET …/check`, `POST …/submit`, `POST …/review` | Verificação e análise |
+| `POST …/measurements` | Medição (fora do limite com PT em vigor → suspensão automática) |
+| `POST …/release`, `POST …/acknowledge`, `POST …/start` | Liberação assinada, ciência de cada integrante, início |
+| `POST …/suspend`, `POST …/resume` | Suspensão (qualquer integrante, sem atrito) e retomada assinada |
+| `POST …/entries`, `POST …/entries/:id/exit` | Entradas e saídas |
+| `POST …/close`, `POST …/cancel`, `POST …/reject` | Encerramento assinado, cancelamento, rejeição |
+| `GET …/validity`, `GET …/signatures`, `GET …/history` | Vale agora?, assinaturas verificadas, histórico |
+
 ## Pendências
 
 - Decisão 7: indicar profissional de SST e assessoria jurídica.
 - Validar `docker-compose.yml` e o realm do Keycloak na sua máquina,
   inclusive se o claim `amr` chega no token com o segundo fator.
 - Limite de taxa está em memória; em produção, usar Redis.
+- PT: telas (Fase 3b); fotos no checklist da PT; revalidação por turno sem
+  mudança de condições (NR-35, item 35.5.8.2) ainda não implementada — hoje
+  exige nova PT.
+- Decisão pendente: trabalhador **sem conta** não consegue registrar ciência, e
+  a PT não inicia. Alternativa (ciência colhida presencialmente e atestada pelo
+  supervisor) depende de parecer jurídico.
+- Valores de exemplo nos testes (limites de gases, validade) são só dados de
+  teste, não recomendação normativa.
 - Login real pelo Keycloak no site ainda não foi testado (só com token simulado).
 - Sem modo offline: sem sinal, o que foi digitado fica na tela e o salvamento
   pode ser repetido, mas não há fila local (planejado para fase futura).

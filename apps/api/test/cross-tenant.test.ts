@@ -175,6 +175,66 @@ const CASES: Record<string, Case> = {
   'DELETE /aprs/:id/photos/:photoId': async () => {
     await asSst(http.delete(`/aprs/${B('aprB')}/photos/${B('photoB')}`)).expect(404);
   },
+  // ---- Fase 3a: pessoas, tipos de PT, PT ----
+  'GET /workers': async () => { bodyHasNo((await asSst(http.get('/workers')).expect(200)).body, [B('workerB'), 'Trabalhador Beta']); },
+  'POST /workers': async () => { await asSst(http.post('/workers')).send({ fullName: 'X', userId: B('adminB') }).expect(400); },
+  'PATCH /workers/:id': async () => { await asSst(http.patch(`/workers/${B('workerB')}`)).send({ active: false }).expect(404); },
+  'GET /qualification-types': async () => { bodyHasNo((await asSst(http.get('/qualification-types')).expect(200)).body, [B('qualTypeB'), 'Treinamento Beta']); },
+  'POST /qualification-types': async () => { await asSst(http.post('/qualification-types')).send({ name: 'X', kind: 'OTHER', tenantId: B('beta') }).expect(400); },
+  'GET /workers/:id/qualifications': async () => { await asSst(http.get(`/workers/${B('workerB')}/qualifications`)).expect(404); },
+  'POST /workers/:id/qualifications': async () => {
+    await asSst(http.post(`/workers/${B('workerB')}/qualifications`)).send({ typeId: B('qualTypeB'), validFrom: '2026-01-01', validUntil: '2027-01-01' }).expect(404);
+  },
+  'POST /worker-qualifications/:id/revoke': async () => { await asSst(http.post(`/worker-qualifications/${B('workerQualB')}/revoke`)).send({ reason: 'x' }).expect(404); },
+  'GET /pt-types': async () => { bodyHasNo((await asSst(http.get('/pt-types')).expect(200)).body, [B('ptTypeB'), 'PT Beta']); },
+  'POST /pt-types': async () => {
+    await asSst(http.post('/pt-types')).send({ name: 'X', checklistTemplateVersionId: B('versionB'), maxValidityMinutes: 60, requiresGasMonitoring: false,
+      gasParameters: [], gasMaxAgeMinutes: null, requiresEntryLog: false, releaserQualificationTypeId: null, segregateCreatorReleaser: true, requirements: [] }).expect(400);
+  },
+  'PUT /pt-types/:id': async () => {
+    await asSst(http.put(`/pt-types/${B('ptTypeB')}`)).send({ name: 'PT Beta', checklistTemplateVersionId: B('versionB'), maxValidityMinutes: 60, requiresGasMonitoring: false,
+      gasParameters: [], gasMaxAgeMinutes: null, requiresEntryLog: false, releaserQualificationTypeId: null, segregateCreatorReleaser: true, requirements: [] }).expect(404);
+  },
+  'POST /pt-types/:id/publish': async () => {
+    await asSst(http.post(`/pt-types/${B('ptTypeB')}/publish`)).send({ professionalValidation: { name: 'x', registry: 'y', date: '2026-11-01' } }).expect(404);
+  },
+  'GET /work-permits': async () => { bodyHasNo((await asSst(http.get('/work-permits')).expect(200)).body, [B('ptB'), SECRET]); },
+  'POST /work-permits': async () => {
+    await asSst(http.post('/work-permits')).send({ ptTypeId: B('ptTypeB'), aprId: B('aprB'), location: 'x', description: 'x',
+      startsAt: new Date().toISOString(), endsAt: new Date(Date.now() + 3600_000).toISOString() }).expect(400);
+  },
+  'GET /work-permits/:id': async () => { await asSst(http.get(`/work-permits/${B('ptB')}`)).expect(404); },
+  'GET /work-permits/:id/check': async () => { await asSst(http.get(`/work-permits/${B('ptB')}/check`)).expect(404); },
+  'GET /work-permits/:id/validity': async () => { await asSst(http.get(`/work-permits/${B('ptB')}/validity`)).expect(404); },
+  'GET /work-permits/:id/signatures': async () => { await asSst(http.get(`/work-permits/${B('ptB')}/signatures`)).expect(404); },
+  'GET /work-permits/:id/history': async () => { await asSst(http.get(`/work-permits/${B('ptB')}/history`)).expect(404); },
+  'PATCH /work-permits/:id': async () => { await asSst(http.patch(`/work-permits/${B('ptB')}`)).send({ rowVersion: 1, location: 'invadido' }).expect(404); },
+  'PUT /work-permits/:id/team': async () => {
+    await asSst(http.put(`/work-permits/${B('ptB')}/team`)).send({ rowVersion: 1, members: [{ workerId: B('workerB'), function: 'EXECUTOR' }] }).expect(404);
+  },
+  'PUT /work-permits/:id/answers/:questionId': async () => {
+    await asSst(http.put(`/work-permits/${B('ptB')}/answers/${B('questionB')}`)).send({ answer: 'NO' }).expect(404);
+  },
+  'POST /work-permits/:id/answers/:questionId/reassess': async () => {
+    await asSst(http.post(`/work-permits/${B('ptB')}/answers/${B('questionB')}/reassess`)).send({ answer: 'YES', version: 1 }).expect(404);
+  },
+  'POST /work-permits/:id/submit': async () => { await asSst(http.post(`/work-permits/${B('ptB')}/submit`)).expect(404); },
+  'POST /work-permits/:id/review': async () => { await asSst(http.post(`/work-permits/${B('ptB')}/review`)).send({ approve: true }).expect(404); },
+  'POST /work-permits/:id/measurements': async () => {
+    await asSst(http.post(`/work-permits/${B('ptB')}/measurements`)).send({ parameterKey: 'o2', value: 20, instrument: 'x' }).expect(404);
+  },
+  'POST /work-permits/:id/release': async () => { await asSst(http.post(`/work-permits/${B('ptB')}/release`)).expect(404); },
+  'POST /work-permits/:id/resume': async () => { await asSst(http.post(`/work-permits/${B('ptB')}/resume`)).expect(404); },
+  'POST /work-permits/:id/acknowledge': async () => { await asSst(http.post(`/work-permits/${B('ptB')}/acknowledge`)).expect(404); },
+  'POST /work-permits/:id/start': async () => { await asSst(http.post(`/work-permits/${B('ptB')}/start`)).expect(404); },
+  'POST /work-permits/:id/suspend': async () => { await asSst(http.post(`/work-permits/${B('ptB')}/suspend`)).send({ reason: 'x' }).expect(404); },
+  'POST /work-permits/:id/entries': async () => { await asSst(http.post(`/work-permits/${B('ptB')}/entries`)).send({ workerId: B('workerB') }).expect(404); },
+  'POST /work-permits/:id/entries/:entryId/exit': async () => {
+    await asSst(http.post(`/work-permits/${B('ptB')}/entries/00000000-0000-4000-8000-000000000000/exit`)).expect(404);
+  },
+  'POST /work-permits/:id/close': async () => { await asSst(http.post(`/work-permits/${B('ptB')}/close`)).send({ areaReleased: true, teamOut: true }).expect(404); },
+  'POST /work-permits/:id/cancel': async () => { await asSst(http.post(`/work-permits/${B('ptB')}/cancel`)).send({ reason: 'x' }).expect(404); },
+  'POST /work-permits/:id/reject': async () => { await asSst(http.post(`/work-permits/${B('ptB')}/reject`)).send({ reason: 'x' }).expect(404); },
   'GET /audit-events/verify': async () => {
     const before = await asA(http.get('/audit-events/verify')).expect(200);
     const authB = `Bearer ${await token({ sub: 'sub-adminB' })}`;
@@ -212,7 +272,12 @@ describe('isolamento entre empresas em todas as rotas', () => {
     const sectors = await http.get(`/units/${w.ids.unitB1}/sectors`).set('Authorization', authB).set('X-Tenant-Id', w.ids.beta!).expect(200);
     expect(sectors.body.map((s: { name: string }) => s.name)).toEqual(['Manutenção']);
     const apr = await http.get(`/aprs/${B('aprB')}`).set('Authorization', authB).set('X-Tenant-Id', w.ids.beta!).expect(200);
-    expect(apr.body).toMatchObject({ status: 'DRAFT', location: 'Telhado Beta', rowVersion: 1, analysisVersion: 1 });
+    expect(apr.body).toMatchObject({ status: 'APPROVED', location: 'Telhado Beta', rowVersion: 1, analysisVersion: 1 });
+    const pt = await http.get(`/work-permits/${B('ptB')}`).set('Authorization', authB).set('X-Tenant-Id', w.ids.beta!).expect(200);
+    expect(pt.body).toMatchObject({ status: 'DRAFT', location: 'Tanque Beta', row_version: 1 });
+    expect(pt.body.team).toEqual([]);
+    const wq = await http.get(`/workers/${B('workerB')}/qualifications`).set('Authorization', authB).set('X-Tenant-Id', w.ids.beta!).expect(200);
+    expect(wq.body[0].revoked_at).toBeNull();
     expect(apr.body.answers.map((a: { answer: string }) => a.answer)).toEqual(['YES']);
     expect(apr.body.photos).toHaveLength(1);
     const versions = await http.get('/apr-templates').set('Authorization', authB).set('X-Tenant-Id', w.ids.beta!).expect(200);
