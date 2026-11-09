@@ -18,6 +18,8 @@ export async function createApp(config: AppConfig, keys?: JWTVerifyGetKey, logge
   }
   const app = await NestFactory.create<NestExpressApplication>(AppModule.forRoot(config, keys, storage, dev), {
     logger: logger ? ['error', 'warn', 'log'] : false,
+    // Corpo bruto preservado para conferir a assinatura dos webhooks de pagamento.
+    rawBody: true,
   });
   app.use(helmet({ crossOriginResourcePolicy: { policy: config.corsOrigins.length ? 'cross-origin' : 'same-origin' } }));
   if (config.corsOrigins.length) {

@@ -15,6 +15,9 @@ export const PERMISSIONS = {
   // Guarda de documentos: prazos vêm do jurídico da empresa; nada é pré-configurado.
   'retention.read': ['COMPANY_ADMIN', 'SST', 'AUDITOR'],
   'retention.write': ['COMPANY_ADMIN'],
+  'billing.read': ['COMPANY_ADMIN'],
+  // Exportação completa ao fim do contrato (e a qualquer momento).
+  'tenant.export': ['COMPANY_ADMIN'],
   'config.read': ['COMPANY_ADMIN', 'SST', 'SUPERVISOR', 'EXECUTOR', 'AUDITOR'],
   'risk_matrix.write': ['SST'],
   'template.write': ['SST'],

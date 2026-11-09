@@ -22,7 +22,7 @@ export class SessionController {
       const memberships = await tx
         .selectFrom('memberships')
         .innerJoin('tenants', 'tenants.id', 'memberships.tenant_id')
-        .select(['memberships.id', 'memberships.status', 'tenants.id as tenant_id', 'tenants.legal_name', 'tenants.trade_name'])
+        .select(['memberships.id', 'memberships.status', 'tenants.id as tenant_id', 'tenants.legal_name', 'tenants.trade_name', 'tenants.status as tenant_status'])
         .where('memberships.user_id', '=', auth.userId)
         .execute();
       const roles = await tx
@@ -30,12 +30,15 @@ export class SessionController {
         .select(['membership_id', 'role', 'scope_type', 'unit_id'])
         .where('membership_id', 'in', memberships.length ? memberships.map((m) => m.id) : ['00000000-0000-0000-0000-000000000000'])
         .execute();
+      const platformAdmin = !!(await tx.selectFrom('platform_admins').select('user_id').executeTakeFirst());
       return {
         user: { id: user.id, email: user.email, displayName: user.display_name, mfa: auth.mfa },
+        platformAdmin,
         tenants: memberships.map((m) => ({
           tenantId: m.tenant_id,
           name: m.trade_name ?? m.legal_name,
           status: m.status,
+          tenantStatus: m.tenant_status,
           roles: roles.filter((r) => r.membership_id === m.id).map((r) => ({ role: r.role, scopeType: r.scope_type, unitId: r.unit_id })),
         })),
       };

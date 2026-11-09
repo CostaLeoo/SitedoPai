@@ -35,15 +35,16 @@ async function seed() {
   const tenant = await owner.insertInto('tenants').values({ legal_name: 'Metalúrgica E2E Ltda (fictícia)', trade_name: 'Metalúrgica E2E', cnpj: '11222333000181' })
     .returning('id').executeTakeFirstOrThrow();
   ids.tenant = tenant.id;
-  const people = [['exec', 'Edson Executante'], ['sup', 'Sueli Supervisora'], ['sst', 'Sérgio SST'], ['sst2', 'Silvia SST']];
+  const people = [['exec', 'Edson Executante'], ['sup', 'Sueli Supervisora'], ['sst', 'Sérgio SST'], ['sst2', 'Silvia SST'], ['admin', 'Ana Administradora'], ['plat', 'Paula Plataforma']];
   for (const [key, name] of people) {
     const u = await owner.insertInto('users').values({ email: `${key}@e2e.test`, display_name: `${name} (fictício)`, oidc_subject: `sub-${key}` })
       .returning('id').executeTakeFirstOrThrow();
     ids[key!] = u.id;
   }
+  await owner.insertInto('platform_admins').values({ user_id: ids.plat! }).execute();
   await withContext(owner, { tenantId: tenant.id }, async (tx) => {
     const unit = await tx.insertInto('units').values({ tenant_id: tenant.id, name: 'Planta Hortolândia', code: 'HTL' }).returning('id').executeTakeFirstOrThrow();
-    for (const [key, role] of [['exec', 'EXECUTOR'], ['sup', 'SUPERVISOR'], ['sst', 'SST'], ['sst2', 'SST']] as const) {
+    for (const [key, role] of [['exec', 'EXECUTOR'], ['sup', 'SUPERVISOR'], ['sst', 'SST'], ['sst2', 'SST'], ['admin', 'COMPANY_ADMIN']] as const) {
       const m = await tx.insertInto('memberships').values({ tenant_id: tenant.id, user_id: ids[key]!, status: 'ACTIVE' }).returning('id').executeTakeFirstOrThrow();
       await tx.insertInto('role_assignments').values({ tenant_id: tenant.id, membership_id: m.id, role, scope_type: 'TENANT' }).execute();
     }

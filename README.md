@@ -7,8 +7,9 @@ e Permissão de Trabalho (PT), destinada a empresas brasileiras.
 > velocidade de preenchimento e liberação.
 
 **Situação:** Fase 1 (Fundação), Fase 2 (APR), Fase 3 (Permissão de
-Trabalho) e Fase 4 (PDF com QR Code, arquivamento e guarda), com backend e
-telas no celular, implementadas e testadas localmente. Não está pronto para produção (ver
+Trabalho), Fase 4 (PDF com QR Code, arquivamento e guarda) e Fase 5
+(comercial: planos, assinaturas, cobrança e exportação), com backend e telas no
+celular, implementadas e testadas localmente. Não está pronto para produção (ver
 *Pendências*).
 
 ## Documentos
@@ -74,7 +75,8 @@ pnpm test
 | `apps/api/test/pt.test.ts` | 21 | Qualificações e trabalhadores, tipo de PT, APR aprovada obrigatória, validade máxima, funções e qualificações da equipe, análise, gases (ausente, fora do limite), liberação (papel, designação, MFA, login recente, segregação), ciência individual, entradas, suspensão automática por gás, retomada, encerramento, verificação de assinaturas, expiração |
 | `apps/api/test/documents.test.ts` | 14 | PDF da APR e da PT (texto, CNPJ, situação na emissão, aviso de PT sem validade, PDF/A declarado, estrutura válida), hash do arquivo, emissões imutáveis, arquivo adulterado não é entregue, auditoria de download, verificação pública sem dados pessoais, regras de guarda, retenção especial e cálculo de elegibilidade |
 | `apps/api/test/dev-login.test.ts` | 2 | Login de teste desligado por padrão e recusado em produção |
-| `apps/api/test/cross-tenant.test.ts` | 90 | Lê a lista real de rotas da API (93) e tenta ler, alterar e criar dados da empresa B como administrador e como SST da A. Rota nova sem caso de teste faz a suíte falhar |
+| `apps/api/test/billing.test.ts` | 14 | Planos (só a plataforma, também no banco), contratação com tolerância obrigatória, limite de unidades, webhook (assinatura HMAC, tempo, adulteração, repetição), tolerância → somente consulta → ativa, ações de segurança da PT liberadas em somente consulta, cobrança e assinatura imutáveis, visão da plataforma sem conteúdo, cancelamento e encerramento sem apagar nada, exportação completa (PDFs, fotos originais, manifesto com hashes, CSV protegido) |
+| `apps/api/test/cross-tenant.test.ts` | 92 | Lê a lista real de rotas da API (109) e tenta ler, alterar e criar dados da empresa B como administrador e como SST da A. Rota nova sem caso de teste faz a suíte falhar |
 
 ### Testes de ponta a ponta (site)
 
@@ -187,6 +189,36 @@ profissional que validou.
 - PDF gerado com pdfkit (ver ADR 0002). PDF/A-2b é declarado, mas a
   conformidade precisa ser validada com veraPDF antes da produção.
 
+## Comercial (Fase 5)
+
+| Rota | O que faz |
+| --- | --- |
+| `GET/POST /platform/plans`, `PATCH /platform/plans/:id` | Planos (preço e limites não mudam depois de criados; só ativar/desativar) |
+| `GET /platform/billing/overview` | Empresas, assinatura, valor em atraso e **contagens** de uso (sem conteúdo) |
+| `POST /platform/tenants/:id/subscription`, `…/subscription/cancel` | Contratar (com dias de tolerância informados) e cancelar |
+| `POST /platform/tenants/:id/status` | Situação manual (ativa, somente consulta, encerrada), com motivo |
+| `POST /billing/webhooks/:provedor` | Avisos do provedor: assinatura HMAC, janela de 5 min, idempotente |
+| `POST /platform/billing/simulate` | Só com o provedor simulado: gera cobrança, pagamento ou falha |
+| `GET /billing` | A empresa vê assinatura, cobranças e comprovantes (administrador) |
+| `POST /exports` | ZIP com todos os dados, PDFs, fotos originais e manifesto SHA-256 |
+
+**Situação da empresa**, recalculada a cada aviso e de hora em hora
+(`BILLING_SYNC_INTERVAL_MINUTES`):
+
+- nada em atraso → **ativa**;
+- atraso dentro da tolerância → **em tolerância** (tudo funciona, com aviso);
+- além da tolerância, ou assinatura cancelada após o período pago → **somente consulta**;
+- **encerrada** só por ação manual. Nenhuma situação apaga dados.
+
+Em somente consulta ou encerrada, continuam liberados: consultar, emitir PDF,
+exportar, criar retenção especial e, nas PTs em andamento, **suspender,
+registrar entrada e saída, medir gases e encerrar**. Bloqueados: criar APR/PT,
+liberar e retomar PT, cadastros.
+
+Nenhum dado de cartão passa pelo sistema: o pagamento acontece na página do
+provedor. Só existe o provedor **simulado** (recusado com `NODE_ENV=production`);
+a integração real depende da escolha do provedor.
+
 ## Pendências
 
 - Decisão 7: indicar profissional de SST e assessoria jurídica.
@@ -213,5 +245,11 @@ profissional que validou.
 - Matriz de conformidade ainda preliminar (textos oficiais a conferir).
 - Fase 4: validar PDF/A com veraPDF; em produção, ativar Object Lock (modo
   compliance) no bucket para os PDFs; prazos de guarda dependem do jurídico.
+- Fase 5: **escolher o provedor de pagamento** (ex.: Asaas, Pagar.me, Mercado
+  Pago, Stripe, Iugu) e implementar o adaptador `PaymentProvider`; valores dos
+  planos e dias de tolerância são decisões comerciais (nada vem pré-cadastrado).
+- Fase 5: exportação é gerada na hora, em memória; para empresas grandes,
+  passar para tarefa em segundo plano com link temporário.
+- Fase 5: nota fiscal de serviço não está no escopo (depende do provedor/contador).
 - Fase 4: a data final usada na guarda é a decisão da APR e o encerramento da
   PT (ou o fim da validade, se expirou). Confirmar com o jurídico.

@@ -28,19 +28,24 @@ import { DEV_SIGNER, DevLoginController, DevSigner } from './auth/dev-login';
 import { DocumentsController, VerifyController } from './documents/documents.controller';
 import { DocumentsService } from './documents/documents.service';
 import { RetentionController } from './documents/retention.controller';
+import { BillingService } from './billing/billing.service';
+import { BillingWebhookController, CompanyBillingController, PlatformBillingController } from './billing/billing.controller';
+import { ExportController } from './billing/export.controller';
+import { PAYMENT_PROVIDER, PaymentProvider, SimulatedProvider } from './billing/provider';
 import { TenantGuard } from './tenancy/tenant.guard';
 
 @Module({})
 export class AppModule {
   /** `keys` permite aos testes usar chaves locais no lugar do Keycloak. */
-  static forRoot(config: AppConfig, keys?: JWTVerifyGetKey, storage?: ObjectStorage, dev?: DevSigner): DynamicModule {
+  static forRoot(config: AppConfig, keys?: JWTVerifyGetKey, storage?: ObjectStorage, dev?: DevSigner, payment?: PaymentProvider): DynamicModule {
     return {
       module: AppModule,
       imports: [ThrottlerModule.forRoot([{ ttl: 60_000, limit: config.RATE_LIMIT_PER_MINUTE }])],
       controllers: [SessionController, UnitsController, MembershipsController, AuditController, PlatformController,
         RiskMatricesController, TemplatesController, AprsController, PhotosController,
         PeopleController, PtTypesController, WorkPermitsController,
-        DocumentsController, VerifyController, RetentionController, ...(dev ? [DevLoginController] : [])],
+        DocumentsController, VerifyController, RetentionController,
+        PlatformBillingController, BillingWebhookController, CompanyBillingController, ExportController, ...(dev ? [DevLoginController] : [])],
       providers: [
         { provide: APP_CONFIG, useValue: config },
         ...(dev ? [{ provide: DEV_SIGNER, useValue: dev }] : []),
@@ -51,6 +56,8 @@ export class AppModule {
         AprService,
         PtService,
         DocumentsService,
+        BillingService,
+        { provide: PAYMENT_PROVIDER, useValue: payment ?? new SimulatedProvider(config.BILLING_WEBHOOK_SECRET) },
         SignatureService,
         // Ordem importa: limite de taxa → autenticação → empresa → permissão.
         { provide: APP_GUARD, useClass: ThrottlerGuard },

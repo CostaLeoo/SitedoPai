@@ -4,7 +4,7 @@ import type { Response } from 'express';
 import { createHash } from 'node:crypto';
 import { audit, DocType, sql, Tx } from '@sitedopai/db';
 import { canOnUnit } from '../authz/permissions';
-import { Auth, Public, RequirePermission, Tenant } from '../common/decorators';
+import { Auth, Public, RequirePermission, Tenant, AllowWhenRestricted } from '../common/decorators';
 import { notFound, requireUnit } from '../common/guards';
 import type { AuthContext, TenantContext } from '../common/request';
 import { parse, uuid } from '../common/validation';
@@ -59,12 +59,14 @@ export class DocumentsController {
 
   /** Emite o PDF da APR em qualquer situação; a situação fica impressa em destaque. */
   @Post('aprs/:id/documents')
+  @AllowWhenRestricted()
   @RequirePermission('apr.read')
   issueApr(@Auth() auth: AuthContext, @Tenant() t: TenantContext, @Param('id') id: string) {
     return this.issue(auth, t, 'apr', id);
   }
 
   @Post('work-permits/:id/documents')
+  @AllowWhenRestricted()
   @RequirePermission('pt.read')
   issuePt(@Auth() auth: AuthContext, @Tenant() t: TenantContext, @Param('id') id: string) {
     return this.issue(auth, t, 'work_permit', id);

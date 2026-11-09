@@ -1,3 +1,4 @@
+import { enforcePlanLimit } from '../billing/limits';
 import { Body, Controller, Get, NotFoundException, Param, Patch, Post, ForbiddenException, HttpCode } from '@nestjs/common';
 import { z } from 'zod';
 import { audit } from '@sitedopai/db';
@@ -40,6 +41,7 @@ export class UnitsController {
   create(@Auth() auth: AuthContext, @Tenant() t: TenantContext, @Body() body: unknown) {
     const input = parse(createUnit, body);
     return this.db.run({ tenantId: t.tenantId, userId: auth.userId }, async (tx) => {
+      await enforcePlanLimit(tx, t.tenantId, 'units');
       const unit = await tx
         .insertInto('units')
         .values({ tenant_id: t.tenantId, name: input.name, code: input.code, city: input.city ?? null, state: input.state ?? null })

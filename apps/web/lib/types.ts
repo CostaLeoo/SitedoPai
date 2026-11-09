@@ -6,8 +6,10 @@ export interface RiskClass { min: number; max: number; label: string; acceptable
 export interface RoleRef { role: string; scopeType: 'TENANT' | 'UNIT'; unitId: string | null }
 export interface Me {
   user: { id: string; email: string; displayName: string; mfa: boolean };
-  tenants: { tenantId: string; name: string; status: string; roles: RoleRef[] }[];
+  platformAdmin: boolean;
+  tenants: { tenantId: string; name: string; status: string; tenantStatus: TenantStatus; roles: RoleRef[] }[];
 }
+export type TenantStatus = 'ACTIVE' | 'GRACE_PERIOD' | 'READ_ONLY' | 'CLOSED';
 export interface Question {
   id: string; position: number; text: string; helpText: string | null; expectedAnswer: Answer;
   criticality: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL'; required: boolean; allowNa: boolean; justificationOn: string[];
