@@ -13,21 +13,30 @@ import { MembershipsController } from './modules/memberships.controller';
 import { PlatformController } from './modules/platform.controller';
 import { SessionController } from './modules/session.controller';
 import { UnitsController } from './modules/units.controller';
+import { AprsController } from './modules/aprs.controller';
+import { PhotosController } from './modules/photos.controller';
+import { RiskMatricesController } from './modules/risk-matrices.controller';
+import { TemplatesController } from './modules/templates.controller';
+import { AprService } from './apr/apr.service';
+import { LocalStorage, OBJECT_STORAGE, ObjectStorage, S3Storage } from './storage/storage';
 import { TenantGuard } from './tenancy/tenant.guard';
 
 @Module({})
 export class AppModule {
   /** `keys` permite aos testes usar chaves locais no lugar do Keycloak. */
-  static forRoot(config: AppConfig, keys?: JWTVerifyGetKey): DynamicModule {
+  static forRoot(config: AppConfig, keys?: JWTVerifyGetKey, storage?: ObjectStorage): DynamicModule {
     return {
       module: AppModule,
       imports: [ThrottlerModule.forRoot([{ ttl: 60_000, limit: config.RATE_LIMIT_PER_MINUTE }])],
-      controllers: [SessionController, UnitsController, MembershipsController, AuditController, PlatformController],
+      controllers: [SessionController, UnitsController, MembershipsController, AuditController, PlatformController,
+        RiskMatricesController, TemplatesController, AprsController, PhotosController],
       providers: [
         { provide: APP_CONFIG, useValue: config },
         { provide: TOKEN_KEYS, useValue: keys ?? remoteKeys(config) },
+        { provide: OBJECT_STORAGE, useValue: storage ?? createStorage(config) },
         DbService,
         TokenVerifier,
+        AprService,
         // Ordem importa: limite de taxa → autenticação → empresa → permissão.
         { provide: APP_GUARD, useClass: ThrottlerGuard },
         { provide: APP_GUARD, useClass: AuthGuard },
@@ -37,4 +46,12 @@ export class AppModule {
       ],
     };
   }
+}
+
+function createStorage(config: AppConfig): ObjectStorage {
+  if (config.STORAGE_DRIVER === 's3') {
+    if (!config.S3_BUCKET) throw new Error('Defina S3_BUCKET para STORAGE_DRIVER=s3');
+    return new S3Storage(config.S3_BUCKET, { region: config.S3_REGION, endpoint: config.S3_ENDPOINT, forcePathStyle: !!config.S3_ENDPOINT });
+  }
+  return new LocalStorage(config.STORAGE_DIR);
 }

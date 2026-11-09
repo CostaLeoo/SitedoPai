@@ -12,6 +12,15 @@ export const PERMISSIONS = {
   'membership.read': ['COMPANY_ADMIN', 'AUDITOR'],
   'membership.write': ['COMPANY_ADMIN'],
   'audit.read': ['COMPANY_ADMIN', 'AUDITOR'],
+  'config.read': ['COMPANY_ADMIN', 'SST', 'SUPERVISOR', 'EXECUTOR', 'AUDITOR'],
+  'risk_matrix.write': ['SST'],
+  'template.write': ['SST'],
+  'template.review': ['SST'],
+  'hazard_library.write': ['SST'],
+  'apr.read': ['COMPANY_ADMIN', 'SST', 'SUPERVISOR', 'EXECUTOR', 'AUDITOR'],
+  'apr.write': ['SST', 'SUPERVISOR', 'EXECUTOR'],
+  'apr.approve': ['SST', 'SUPERVISOR'],
+  'apr.photo_original': ['COMPANY_ADMIN', 'SST', 'SUPERVISOR', 'AUDITOR'],
 } as const satisfies Record<string, readonly Role[]>;
 
 export type Permission = keyof typeof PERMISSIONS;

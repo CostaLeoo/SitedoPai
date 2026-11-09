@@ -6,8 +6,9 @@ e Permissão de Trabalho (PT), destinada a empresas brasileiras.
 > Princípio fundamental: a segurança dos trabalhadores tem prioridade sobre a
 > velocidade de preenchimento e liberação.
 
-**Situação:** Fase 1 (Fundação) implementada e testada localmente. Não está
-pronto para produção (ver *Pendências*).
+**Situação:** Fase 1 (Fundação) e Fase 2a (backend da APR) implementadas e
+testadas localmente. Telas da APR (Fase 2b) ainda não existem. Não está pronto
+para produção (ver *Pendências*).
 
 ## Documentos
 
@@ -61,7 +62,9 @@ pnpm test
 | --- | --- | --- |
 | `packages/db/test/rls.test.ts` | 21 | RLS em todas as tabelas, chaves compostas, papel sem `BYPASSRLS`, funções privilegiadas, auditoria somente inserção, 30 gravações concorrentes, detecção de adulteração |
 | `apps/api/test/api.test.ts` | 38 | Tokens inválidos (assinatura, validade, emissor, público, `alg: none`), convite, MFA por perfil, permissões e escopo por unidade, empresa somente leitura, concorrência (409), área da plataforma |
-| `apps/api/test/cross-tenant.test.ts` | 13 | Lê a lista real de rotas da API e tenta ler, alterar e criar dados da empresa B como administrador da A. Rota nova sem caso de teste faz a suíte falhar |
+| `packages/db/test/apr-triggers.test.ts` | 7 | Travas da APR no banco: publicação com revisor e validação profissional, imutabilidade de modelo, matriz e APR aprovada, limite e preservação de fotos, numeração |
+| `apps/api/test/apr.test.ts` | 38 | Matriz, ciclo do modelo (revisão por outra pessoa), preenchimento, "Sim" que não é seguro, pergunta crítica com nova avaliação, fotos (arquivo disfarçado, imagem corrompida, HEIC, EXIF/GPS removido, original íntegro, limite com envios simultâneos), análise de riscos, envio, aprovação, devolução, cancelamento, revisão, histórico |
+| `apps/api/test/cross-tenant.test.ts` | 43 | Lê a lista real de rotas da API (45) e tenta ler, alterar e criar dados da empresa B como administrador e como SST da A. Rota nova sem caso de teste faz a suíte falhar |
 
 ## Segurança implementada na Fase 1
 
@@ -80,11 +83,41 @@ pnpm test
 - Empresa em modo somente leitura (inadimplência ou encerramento) mantém
   consulta e bloqueia escrita, sem apagar nada.
 
+## APR (Fase 2a)
+
+| Rota | O que faz |
+| --- | --- |
+| `GET/POST /risk-matrices`, `POST /risk-matrices/:id/publish` | Matriz de risco da empresa (SST) |
+| `GET/POST /apr-templates`, `POST /apr-templates/:id/versions` | Modelos e novas versões |
+| `GET /apr-template-versions/:id`, `PUT …/questions`, `POST …/submit`, `POST …/review` | Perguntas, envio para revisão, publicação ou devolução |
+| `GET/POST /hazard-library` | Biblioteca de perigos |
+| `GET/POST /aprs`, `GET/PATCH /aprs/:id` | Lista (por escopo), criação, leitura completa, cabeçalho (com `rowVersion`) |
+| `PUT /aprs/:id/answers/:questionId`, `POST …/reassess` | Resposta (com `version`) e nova avaliação |
+| `PUT /aprs/:id/analysis` | Etapas, perigos e controles (com `analysisVersion`) |
+| `GET /aprs/:id/check` | Pendências, avisos e progresso |
+| `POST /aprs/:id/submit · approve · return · cancel · revise` | Fluxo |
+| `GET /aprs/:id/history` | Histórico da APR (da trilha de auditoria) |
+| `POST /aprs/:id/questions/:questionId/photos`, `GET/DELETE /aprs/:id/photos/:photoId`, `GET …/original` | Fotos |
+
+Edições simultâneas: cada parte da APR tem a própria versão (cabeçalho, cada
+resposta, análise). Quem salvar com versão desatualizada recebe 409 e recarrega,
+sem sobrescrever o trabalho do outro.
+
+Fotos: aceitas JPEG, PNG e WebP até 15 MB. O tipo é conferido pelo conteúdo do
+arquivo; a imagem é decodificada de verdade (arquivo disfarçado é recusado); a
+cópia de exibição é reduzida a 1600 px e regravada sem EXIF/GPS; o original fica
+intacto, com SHA-256, para prova. HEIC ainda não é aceito (a tela vai converter).
+
 ## Pendências
 
 - Decisão 7: indicar profissional de SST e assessoria jurídica.
 - Validar `docker-compose.yml` e o realm do Keycloak na sua máquina,
   inclusive se o claim `amr` chega no token com o segundo fator.
 - Limite de taxa está em memória; em produção, usar Redis.
-- Sem frontend ainda: entra junto com a APR, na Fase 2.
+- Fase 2b: telas da APR no celular (formulário vertical Sim/Não/N/A, câmera,
+  salvamento automático, progresso).
+- Antivírus (ClamAV) para anexos: hoje toda foto fica com `scan_status = PENDING`;
+  a decodificação e a regravação já barram arquivos que não são imagem.
+- Nenhum modelo vem como "aprovado": o seed traz matriz e modelo de EXEMPLO em
+  rascunho, que o SST da empresa precisa revisar e publicar.
 - Matriz de conformidade ainda preliminar (textos oficiais a conferir).
