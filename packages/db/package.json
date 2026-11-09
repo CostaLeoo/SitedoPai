@@ -1,0 +1,33 @@
+{
+  "name": "@sitedopai/db",
+  "version": "0.1.0",
+  "private": true,
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "migrate:deploy": "dotenv -e ../../.env -- ts-node src/migrate-cli.ts",
+    "seed": "dotenv -e ../../.env -- ts-node src/seed.ts",
+    "test": "jest --runInBand"
+  },
+  "dependencies": {
+    "kysely": "0.28.19",
+    "pg": "8.23.1"
+  },
+  "devDependencies": {
+    "@types/jest": "30.0.0",
+    "@types/node": "22.20.5",
+    "@types/pg": "8.23.1",
+    "dotenv-cli": "11.1.0",
+    "jest": "30.5.2",
+    "ts-jest": "29.4.15",
+    "ts-node": "10.9.2",
+    "typescript": "5.9.3"
+  },
+  "jest": {
+    "preset": "ts-jest",
+    "testEnvironment": "node",
+    "testMatch": ["<rootDir>/test/**/*.test.ts"]
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "name": "sitedopai",
+  "private": true,
+  "packageManager": "pnpm@10.28.0",
+  "engines": { "node": ">=22" },
+  "scripts": {
+    "db:setup": "bash scripts/setup-db.sh",
+    "db:migrate": "pnpm --filter @sitedopai/db migrate:deploy",
+    "db:seed": "pnpm --filter @sitedopai/db seed",
+    "build": "pnpm -r build",
+    "test": "pnpm --filter @sitedopai/db test && pnpm --filter @sitedopai/api test",
+    "typecheck": "pnpm -r typecheck",
+    "dev": "pnpm --filter @sitedopai/db build && pnpm --filter @sitedopai/api dev"
+  }
+}
