@@ -33,6 +33,14 @@ scripts           Criação do banco e dos papéis
 docs              Especificação, modelo de dados, decisões (ADRs)
 ```
 
+## Testar sem instalar nada (GitHub Codespaces)
+
+[![Abrir no GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/CostaLeoo/SitedoPai?ref=fase-6-homologacao)
+
+Clique, confirme **Create codespace** e espere alguns minutos: o banco, os
+dados fictícios (modo demonstração) e o site são preparados sozinhos, e o site
+abre numa aba nova. Instruções dentro do Codespace em `.devcontainer/LEIA-ME.md`.
+
 ## Como testar no seu computador
 
 Instale uma vez: [Node.js 22](https://nodejs.org), [Docker Desktop](https://www.docker.com/products/docker-desktop/),

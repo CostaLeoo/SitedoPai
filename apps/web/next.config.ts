@@ -1,8 +1,13 @@
 import type { NextConfig } from 'next';
 
+// Opcional: o site repassa /api/* para a API (mesma origem no navegador).
+// Usado no Codespaces, onde só a porta do site fica acessível.
+const proxy = process.env.API_PROXY_TARGET;
+
 const config: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
+  ...(proxy ? { async rewrites() { return [{ source: '/api/:path*', destination: `${proxy.replace(/\/$/, '')}/:path*` }]; } } : {}),
   async headers() {
     return [{
       source: '/:path*',

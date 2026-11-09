@@ -1,0 +1,19 @@
+# Ambiente de DEMONSTRAÇÃO no GitHub Codespaces. Senhas só para este ambiente.
+services:
+  app:
+    image: mcr.microsoft.com/devcontainers/javascript-node:1-22-bookworm
+    volumes: [../..:/workspaces:cached]
+    command: sleep infinity
+    # Compartilha a rede com o banco: a aplicação acessa o Postgres em localhost.
+    network_mode: service:db
+  db:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ../scripts/setup-db.sh:/docker-entrypoint-initdb.d/10-setup-db.sh:ro
+volumes:
+  pgdata:

@@ -16,7 +16,7 @@ export function middleware(req: NextRequest) {
     `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'${dev ? " 'unsafe-eval'" : ''}`,
     "style-src 'self' 'unsafe-inline'",
     "img-src 'self' blob: data:",
-    `connect-src 'self' ${api} ${new URL(idp).origin}`,
+    `connect-src 'self'${api.startsWith('http') ? ` ${api}` : ''} ${new URL(idp).origin}`,
     "frame-ancestors 'none'",
     "base-uri 'self'",
     "form-action 'self'",
