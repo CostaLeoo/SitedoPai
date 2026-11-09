@@ -82,7 +82,7 @@ export class DocumentsService {
       ['Matriz de risco', `${f.matrix.name} (versão ${f.matrix.version})`],
       ['Criada por', `${name(a.created_by)} em ${formatDateTime(a.created_at)}`],
       ['Enviada por', a.submitted_by ? `${name(a.submitted_by)} em ${formatDateTime(a.submitted_at)}` : null],
-      [a.status === 'APPROVED' ? 'Aprovada por' : 'Decisão', a.decided_by ? `${name(a.decided_by)} em ${formatDateTime(a.decided_at)}${a.decision_note ? ` — ${a.decision_note}` : ''}` : null],
+      [a.status === 'APPROVED' ? 'Aprovada por' : 'Decisão', a.decided_by ? `${name(a.decided_by)}${a.decided_at ? ` em ${formatDateTime(a.decided_at)}` : ''}${a.decision_note ? ` — ${a.decision_note}` : ''}` : null],
     ]);
 
     p.h2('Checklist');

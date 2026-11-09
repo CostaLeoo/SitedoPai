@@ -2,9 +2,10 @@
 import { useParams } from 'next/navigation';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { AnalysisEditor } from '@/components/analysis-editor';
+import { DocumentsPanel } from '@/components/documents-panel';
 import { QuestionCard } from '@/components/question-card';
 import { AppShell, useSession } from '@/components/session';
-import { Banner, Button, Card, Field, StatusBadge } from '@/components/ui';
+import { Banner, Button, Card, Field, STATUS_LABEL, StatusBadge } from '@/components/ui';
 import { api, ApiError } from '@/lib/api';
 import type { Apr, Check } from '@/lib/types';
 
@@ -86,6 +87,7 @@ function Editor() {
         {tab === 'Riscos' && <AnalysisEditor apr={apr} editable={editable} onSaved={load} />}
         {tab === 'Enviar' && <SubmitPanel apr={apr} check={check} editable={editable} onDone={load} goTo={setTab} />}
       </div>
+      <DocumentsPanel type="apr" id={apr.id} number={apr.number} statusLabel={(s) => STATUS_LABEL[s] ?? s} />
     </>
   );
 }

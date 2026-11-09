@@ -110,6 +110,7 @@ async function seed() {
       .returning('id').executeTakeFirstOrThrow();
     await tx.updateTable('aprs').set({ status: 'IN_REVIEW' }).where('id', '=', apr.id).execute();
     await tx.updateTable('aprs').set({ status: 'APPROVED', decided_by: ids.sup! }).where('id', '=', apr.id).execute();
+    ids.approvedApr = apr.id;
   });
   await owner.destroy();
   return ids;

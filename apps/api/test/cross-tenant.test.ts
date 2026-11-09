@@ -19,10 +19,17 @@ beforeAll(async () => {
   http = request(w.app.getHttpServer());
   authA = `Bearer ${await token({ sub: 'sub-adminA' })}`;
   sstA = `Bearer ${await token({ sub: 'sub-sstA' })}`;
+  // Documento emitido, regra e retenção da Beta (alvos da Fase 4).
+  const authB = `Bearer ${await token({ sub: 'sub-adminB' })}`;
+  const asBeta = (r: request.Test) => r.set('Authorization', authB).set('X-Tenant-Id', w.ids.beta!);
+  w.ids.docB = (await asBeta(http.post(`/aprs/${w.ids.aprB}/documents`)).expect(201)).body.id;
+  w.ids.ruleB = (await asBeta(http.post('/retention-rules')).send({ documentType: 'apr', minYears: 5, source: 'INTERNAL', basis: SECRET }).expect(201)).body.id;
+  w.ids.holdB = (await asBeta(http.post('/legal-holds')).send({ documentType: 'apr', documentId: w.ids.aprB, reason: SECRET }).expect(201)).body.id;
 });
 afterAll(async () => destroyWorld(w));
 
-const OUTSIDE_TENANT = new Set(['GET /health', 'GET /me', 'GET /platform/tenants', 'POST /platform/tenants']);
+// GET /verify/:code é pública por desenho (QR Code); seu conteúdo é testado em documents.test.ts.
+const OUTSIDE_TENANT = new Set(['GET /health', 'GET /me', 'GET /platform/tenants', 'POST /platform/tenants', 'GET /verify/:code']);
 
 type Case = (http: ReturnType<typeof request>) => Promise<void>;
 const A = () => w.ids.alfa!;
@@ -37,6 +44,24 @@ const bodyHasNo = (body: unknown, values: string[]) => {
 };
 
 const CASES: Record<string, Case> = {
+  'POST /aprs/:id/documents': async () => { await asA(http.post(`/aprs/${B('aprB')}/documents`)).expect(404); },
+  'POST /work-permits/:id/documents': async () => { await asA(http.post(`/work-permits/${B('ptB')}/documents`)).expect(404); },
+  'GET /documents': async () => {
+    await asA(http.get('/documents').query({ documentType: 'apr', documentId: B('aprB') })).expect(404);
+    await asA(http.get('/documents').query({ documentType: 'work_permit', documentId: B('ptB') })).expect(404);
+  },
+  'GET /documents/:id/file': async () => { await asA(http.get(`/documents/${B('docB')}/file`)).expect(404); },
+  'GET /retention-rules': async () => { bodyHasNo((await asA(http.get('/retention-rules')).expect(200)).body, [B('ruleB'), SECRET]); },
+  'POST /retention-rules': async () => {
+    await asA(http.post('/retention-rules')).send({ documentType: 'apr', minYears: 5, source: 'INTERNAL', basis: 'x x x x x', tenantId: B('beta') }).expect(400);
+  },
+  'POST /retention-rules/:id/deactivate': async () => { await asA(http.post(`/retention-rules/${B('ruleB')}/deactivate`)).expect(404); },
+  'GET /legal-holds': async () => { bodyHasNo((await asA(http.get('/legal-holds')).expect(200)).body, [B('holdB'), SECRET]); },
+  'POST /legal-holds': async () => {
+    await asA(http.post('/legal-holds')).send({ documentType: 'apr', documentId: B('aprB'), reason: 'tentativa' }).expect(404);
+  },
+  'POST /legal-holds/:id/release': async () => { await asA(http.post(`/legal-holds/${B('holdB')}/release`)).send({ reason: 'tentativa' }).expect(404); },
+  'GET /retention/report': async () => { bodyHasNo((await asA(http.get('/retention/report')).expect(200)).body, [B('aprB'), B('ptB'), SECRET]); },
   'GET /units': async () => {
     const res = await asA(http.get('/units')).expect(200);
     bodyHasNo(res.body, [w.ids.unitB1!, w.ids.unitC1!]);
@@ -282,5 +307,11 @@ describe('isolamento entre empresas em todas as rotas', () => {
     expect(apr.body.photos).toHaveLength(1);
     const versions = await http.get('/apr-templates').set('Authorization', authB).set('X-Tenant-Id', w.ids.beta!).expect(200);
     expect(versions.body[0].versions.map((v: { status: string }) => v.status)).toEqual(['PUBLISHED']);
+    const holds = await http.get('/legal-holds').set('Authorization', authB).set('X-Tenant-Id', w.ids.beta!).expect(200);
+    expect(holds.body.map((h: { released_at: unknown }) => h.released_at)).toEqual([null]);
+    const rules = await http.get('/retention-rules').set('Authorization', authB).set('X-Tenant-Id', w.ids.beta!).expect(200);
+    expect(rules.body.map((r: { active: boolean }) => r.active)).toEqual([true]);
+    const docs = await http.get('/documents').query({ documentType: 'apr', documentId: B('aprB') }).set('Authorization', authB).set('X-Tenant-Id', w.ids.beta!).expect(200);
+    expect(docs.body).toHaveLength(1);
   });
 });

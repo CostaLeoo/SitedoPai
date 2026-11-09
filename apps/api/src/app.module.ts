@@ -25,6 +25,9 @@ import { WorkPermitsController } from './modules/work-permits.controller';
 import { PtService } from './pt/pt.service';
 import { LocalStorage, OBJECT_STORAGE, ObjectStorage, S3Storage } from './storage/storage';
 import { DEV_SIGNER, DevLoginController, DevSigner } from './auth/dev-login';
+import { DocumentsController, VerifyController } from './documents/documents.controller';
+import { DocumentsService } from './documents/documents.service';
+import { RetentionController } from './documents/retention.controller';
 import { TenantGuard } from './tenancy/tenant.guard';
 
 @Module({})
@@ -36,7 +39,8 @@ export class AppModule {
       imports: [ThrottlerModule.forRoot([{ ttl: 60_000, limit: config.RATE_LIMIT_PER_MINUTE }])],
       controllers: [SessionController, UnitsController, MembershipsController, AuditController, PlatformController,
         RiskMatricesController, TemplatesController, AprsController, PhotosController,
-        PeopleController, PtTypesController, WorkPermitsController, ...(dev ? [DevLoginController] : [])],
+        PeopleController, PtTypesController, WorkPermitsController,
+        DocumentsController, VerifyController, RetentionController, ...(dev ? [DevLoginController] : [])],
       providers: [
         { provide: APP_CONFIG, useValue: config },
         ...(dev ? [{ provide: DEV_SIGNER, useValue: dev }] : []),
@@ -46,6 +50,7 @@ export class AppModule {
         TokenVerifier,
         AprService,
         PtService,
+        DocumentsService,
         SignatureService,
         // Ordem importa: limite de taxa → autenticação → empresa → permissão.
         { provide: APP_GUARD, useClass: ThrottlerGuard },

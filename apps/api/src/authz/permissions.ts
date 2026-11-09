@@ -12,6 +12,9 @@ export const PERMISSIONS = {
   'membership.read': ['COMPANY_ADMIN', 'AUDITOR'],
   'membership.write': ['COMPANY_ADMIN'],
   'audit.read': ['COMPANY_ADMIN', 'AUDITOR'],
+  // Guarda de documentos: prazos vêm do jurídico da empresa; nada é pré-configurado.
+  'retention.read': ['COMPANY_ADMIN', 'SST', 'AUDITOR'],
+  'retention.write': ['COMPANY_ADMIN'],
   'config.read': ['COMPANY_ADMIN', 'SST', 'SUPERVISOR', 'EXECUTOR', 'AUDITOR'],
   'risk_matrix.write': ['SST'],
   'template.write': ['SST'],

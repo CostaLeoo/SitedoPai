@@ -179,11 +179,17 @@ export class Pdf {
     const range = doc.bufferedPageRange();
     for (let i = 0; i < range.count; i++) {
       doc.switchToPage(range.start + i);
-      const y = doc.page.height - MARGIN;
-      doc.font('r').fontSize(7.5).fillColor(MUTED).text(
-        `${ctx.documentNumber} · Emitido em ${formatDateTime(ctx.issuedAt)} por ${ctx.issuedBy} · Código ${ctx.verificationCode} · Página ${i + 1} de ${range.count}`,
-        MARGIN, y, { width: this.width, align: 'center', lineBreak: false },
-      );
+      // Sem margem inferior durante o rodapé: senão o pdfkit cria páginas novas.
+      const bottom = doc.page.margins.bottom;
+      doc.page.margins.bottom = 0;
+      const y = doc.page.height - MARGIN + 6;
+      const page = `Página ${i + 1} de ${range.count}`;
+      doc.font('r').fontSize(7.5).fillColor(MUTED);
+      const pw = doc.widthOfString(page) + 4;
+      doc.text(`${ctx.documentNumber} · Emitido em ${formatDateTime(ctx.issuedAt)} por ${ctx.issuedBy} · Código ${ctx.verificationCode}`,
+        MARGIN, y, { width: this.width - pw - 8, lineBreak: false, ellipsis: true });
+      doc.text(page, MARGIN + this.width - pw, y, { width: pw, align: 'right', lineBreak: false });
+      doc.page.margins.bottom = bottom;
     }
     doc.end();
     return this.done;
