@@ -38,12 +38,13 @@ test('sem login, vai para a tela de entrada', async ({ page }) => {
 test('executante cria a APR e preenche os dados', async ({ page }) => {
   await loginAs(page, 'exec');
   await page.goto('/aprs');
-  await expect(page.getByText('Nenhuma APR ainda.')).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'APRs' })).toBeVisible();
   await noHorizontalScroll(page);
   await page.getByRole('link', { name: 'Nova APR' }).click();
 
-  // Com um único modelo, matriz e unidade, o formulário já vem preenchido.
-  await expect(page.getByLabel('Tipo de serviço (modelo)')).toHaveValue(/.+/);
+  // Com uma única matriz e unidade, esses campos já vêm preenchidos; o modelo é escolhido.
+  await page.getByLabel('Tipo de serviço (modelo)').selectOption({ label: 'Trabalho em altura (versão 1)' });
+  await expect(page.getByLabel('Unidade')).toHaveValue(/.+/);
   await page.getByLabel('Data da atividade').fill('2026-11-10');
   await page.getByRole('button', { name: 'Criar APR' }).click();
   await expect(page.getByRole('heading', { name: /APR-2026-000001/ })).toBeVisible();

@@ -78,7 +78,7 @@ function Editor() {
         {tab === 'Checklist' && (
           <div className="flex flex-col gap-4">
             {apr.questions.map((q) => (
-              <QuestionCard key={q.id} aprId={apr.id} question={q} total={apr.questions.length} editable={editable}
+              <QuestionCard key={q.id} basePath={`/aprs/${apr.id}`} photoAprId={apr.id} question={q} total={apr.questions.length} editable={editable}
                 answer={apr.answers.find((a) => a.questionId === q.id)} photos={apr.photos} userId={session.me.user.id} onChange={load} />
             ))}
           </div>
@@ -106,21 +106,31 @@ function HeaderForm({ apr, editable, onSaved }: { apr: Apr; editable: boolean; o
   const [message, setMessage] = useState<string | null>(null);
   const version = useRef(apr.rowVersion);
   const saved = useRef(form);
+  const latest = useRef(form);
+  latest.current = form;
+  // Salvamentos em fila, sempre com o conteúdo mais recente: sair de um campo
+  // para outro não gera dois envios com a mesma versão (falso conflito).
+  const queue = useRef<Promise<void>>(Promise.resolve());
+  function save() {
+    queue.current = queue.current.then(send);
+    return queue.current;
+  }
 
-  async function save() {
-    if (JSON.stringify(form) === JSON.stringify(saved.current)) return;
+  async function send() {
+    const current = latest.current;
+    if (JSON.stringify(current) === JSON.stringify(saved.current)) return;
     setState('saving');
     try {
       const r = await api<{ rowVersion: number }>(`/aprs/${apr.id}`, 'PATCH', {
         rowVersion: version.current,
-        location: form.location,
-        serviceDescription: form.serviceDescription,
-        responsibleName: form.responsibleName,
-        team: lines(form.team).map((name) => ({ name })),
-        equipment: lines(form.equipment),
+        location: current.location,
+        serviceDescription: current.serviceDescription,
+        responsibleName: current.responsibleName,
+        team: lines(current.team).map((name) => ({ name })),
+        equipment: lines(current.equipment),
       });
       version.current = r.rowVersion;
-      saved.current = form;
+      saved.current = current;
       setState('saved');
       onSaved();
     } catch (e) {

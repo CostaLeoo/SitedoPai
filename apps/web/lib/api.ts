@@ -35,16 +35,18 @@ async function request(path: string, init: RequestInit = {}): Promise<Response> 
   } catch {
     throw new ApiError(0, 'OFFLINE', OFFLINE);
   }
-  if (res.status === 401) {
-    window.location.assign('/entrar');
-    throw new ApiError(401, 'UNAUTHENTICATED', 'Sua sessão expirou. Entre de novo.');
-  }
   if (!res.ok) {
     let body: Record<string, unknown> = {};
     try {
       body = await res.json();
     } catch {
       /* corpo vazio */
+    }
+    // 401 por sessão expirada leva à entrada. Pedido de login recente para
+    // ASSINAR (REAUTH_REQUIRED) fica na tela, que oferece entrar de novo.
+    if (res.status === 401 && body.code !== 'REAUTH_REQUIRED') {
+      window.location.assign('/entrar');
+      throw new ApiError(401, 'UNAUTHENTICATED', 'Sua sessão expirou. Entre de novo.');
     }
     throw new ApiError(
       res.status,

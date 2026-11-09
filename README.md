@@ -6,8 +6,8 @@ e Permissão de Trabalho (PT), destinada a empresas brasileiras.
 > Princípio fundamental: a segurança dos trabalhadores tem prioridade sobre a
 > velocidade de preenchimento e liberação.
 
-**Situação:** Fase 1 (Fundação), Fase 2 (APR: backend e telas) e Fase 3a
-(backend da Permissão de Trabalho) implementadas e testadas localmente. Não está pronto para produção (ver
+**Situação:** Fase 1 (Fundação), Fase 2 (APR) e Fase 3 (Permissão de
+Trabalho), com backend e telas no celular, implementadas e testadas localmente. Não está pronto para produção (ver
 *Pendências*).
 
 ## Documentos
@@ -78,6 +78,12 @@ pnpm build                                  # API e site compilados
 cd apps/web && npx playwright test          # usa o Chrome instalado (CHROME_PATH)
 ```
 
+`apps/web/e2e/pt.spec.ts` (8 cenários): PT a partir de APR aprovada; equipe;
+checklist; análise; medições com vírgula decimal; liberação com login antigo
+pedindo novo login; ciência de cada integrante; entradas; suspensão automática
+por gás com saída ainda permitida; retomada exigindo nova medição; suspensão
+pelo vigia; encerramento assinado; verificação das assinaturas; WCAG 2.2 AA.
+
 `apps/web/e2e/apr.spec.ts` (9 cenários, tela de Pixel 7): login obrigatório;
 criação da APR; perguntas uma abaixo da outra com botões de no mínimo 48 px;
 N/A bloqueado onde não é permitido; acessibilidade WCAG 2.2 AA com axe; fotos
@@ -88,7 +94,9 @@ login é simulado com tokens assinados por chave de teste (sem Keycloak).
 
 Telas capturadas no teste: [checklist](docs/telas/1-checklist.png) ·
 [pergunta crítica](docs/telas/2-pergunta-critica.png) · [riscos](docs/telas/3-riscos.png) ·
-[pendências](docs/telas/4-pendencias.png) · [lista](docs/telas/5-lista.png)
+[pendências](docs/telas/4-pendencias.png) · [lista](docs/telas/5-lista.png) ·
+[PT válida](docs/telas/6-pt-valida.png) · [PT suspensa](docs/telas/7-pt-suspensa.png) ·
+[assinaturas da PT](docs/telas/8-pt-assinaturas.png)
 
 ## Segurança implementada na Fase 1
 
@@ -160,7 +168,7 @@ profissional que validou.
 - Validar `docker-compose.yml` e o realm do Keycloak na sua máquina,
   inclusive se o claim `amr` chega no token com o segundo fator.
 - Limite de taxa está em memória; em produção, usar Redis.
-- PT: telas (Fase 3b); fotos no checklist da PT; revalidação por turno sem
+- PT: fotos no checklist da PT; revalidação por turno sem
   mudança de condições (NR-35, item 35.5.8.2) ainda não implementada — hoje
   exige nova PT.
 - Decisão pendente: trabalhador **sem conta** não consegue registrar ciência, e

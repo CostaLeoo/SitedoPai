@@ -32,6 +32,7 @@ export function Field(props: {
   required?: boolean;
   disabled?: boolean;
   autoComplete?: string;
+  inputMode?: 'text' | 'decimal' | 'numeric';
 }) {
   const id = useId();
   const describedBy = [props.hint && `${id}-hint`, props.error && `${id}-err`].filter(Boolean).join(' ') || undefined;
@@ -53,7 +54,7 @@ export function Field(props: {
         {props.required && <span className="text-danger"> *</span>}
       </label>
       {props.hint && <p id={`${id}-hint`} className="text-sm text-muted">{props.hint}</p>}
-      {props.multiline ? <textarea rows={3} {...common} /> : <input type={props.type ?? 'text'} autoComplete={props.autoComplete} {...common} />}
+      {props.multiline ? <textarea rows={3} {...common} /> : <input type={props.type ?? 'text'} inputMode={props.inputMode} autoComplete={props.autoComplete} {...common} />}
       {props.error && <p id={`${id}-err`} className="text-sm font-semibold text-danger">{props.error}</p>}
     </div>
   );

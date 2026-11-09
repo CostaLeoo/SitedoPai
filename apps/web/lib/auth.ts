@@ -33,3 +33,16 @@ export async function currentUser(): Promise<User | null> {
 export async function accessToken(): Promise<string | null> {
   return (await currentUser())?.access_token ?? null;
 }
+
+/** Só aceita caminhos internos (evita redirecionamento para fora do site). */
+export function safeReturnPath(p: unknown): string {
+  return typeof p === 'string' && p.startsWith('/') && !p.startsWith('//') ? p : '/aprs';
+}
+
+/**
+ * Pede ao provedor um login novo (para assinar com login recente) e volta para
+ * a mesma tela depois.
+ */
+export function reauthenticate(returnTo: string) {
+  return auth().signinRedirect({ prompt: 'login', max_age: 0, state: { returnTo: safeReturnPath(returnTo) } });
+}

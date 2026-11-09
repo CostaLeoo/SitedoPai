@@ -10,14 +10,22 @@ import { Banner, Button } from './ui';
 interface Session {
   me: Me;
   tenant: Me['tenants'][number];
-  can: (permission: 'apr.write' | 'apr.approve') => (unitId: string) => boolean;
+  can: (permission: UiPermission) => (unitId: string) => boolean;
 }
 
 const Ctx = createContext<Session | null>(null);
 export const useSession = () => useContext(Ctx)!;
 
 // Espelha as permissões da API, só para esconder botões. Quem decide é sempre a API.
-const ROLES = { 'apr.write': ['SST', 'SUPERVISOR', 'EXECUTOR'], 'apr.approve': ['SST', 'SUPERVISOR'] } as const;
+const ROLES = {
+  'apr.write': ['SST', 'SUPERVISOR', 'EXECUTOR'],
+  'apr.approve': ['SST', 'SUPERVISOR'],
+  'pt.write': ['SST', 'SUPERVISOR', 'EXECUTOR'],
+  'pt.review': ['SST'],
+  'pt.release': ['SST', 'SUPERVISOR'],
+  'pt.field': ['SST', 'SUPERVISOR', 'EXECUTOR'],
+} as const;
+export type UiPermission = keyof typeof ROLES;
 
 /** Exige login e empresa selecionada; mostra o cabeçalho do aplicativo. */
 export function AppShell({ children }: { children: ReactNode }) {
@@ -56,9 +64,13 @@ export function AppShell({ children }: { children: ReactNode }) {
     <Ctx.Provider value={session}>
       <header className="sticky top-0 z-10 bg-ink text-white">
         <div className="mx-auto flex max-w-screen-sm items-center justify-between gap-3 px-4 py-3">
-          <a href="/aprs" className="min-h-[44px] content-center font-bold">SitedoPai</a>
+          <nav aria-label="Principal" className="flex items-center gap-1">
+            <a href="/aprs" className="min-h-[44px] content-center pr-2 font-bold">SitedoPai</a>
+            <a href="/aprs" className="min-h-[44px] content-center rounded px-2 underline-offset-4 hover:underline">APRs</a>
+            <a href="/pts" className="min-h-[44px] content-center rounded px-2 underline-offset-4 hover:underline">PTs</a>
+          </nav>
           <div className="flex items-center gap-2 text-sm">
-            <span className="max-w-[10rem] truncate" title={session.tenant.name}>{session.tenant.name}</span>
+            <span className="hidden max-w-[10rem] truncate sm:inline" title={session.tenant.name}>{session.tenant.name}</span>
             <button
               type="button"
               className="min-h-[44px] rounded px-2 underline underline-offset-4"

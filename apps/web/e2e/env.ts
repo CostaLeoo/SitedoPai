@@ -15,10 +15,10 @@ export const ids = (): Record<string, string> => JSON.parse(readFileSync(join(TM
  * Simula o login: coloca no sessionStorage o usuário OIDC que o oidc-client-ts
  * guardaria após o retorno do Keycloak, com um token assinado pela chave de teste.
  */
-export async function loginAs(page: Page, who: 'exec' | 'sup' | 'sst') {
+export async function loginAs(page: Page, who: 'exec' | 'sup' | 'sst' | 'sst2', opts: { authAgeSeconds?: number } = {}) {
   const key = await importJWK(JSON.parse(readFileSync(join(TMP, 'private.json'), 'utf8')), 'RS256');
   const now = Math.floor(Date.now() / 1000);
-  const token = await new SignJWT({ email: `${who}@e2e.test`, email_verified: true, amr: ['pwd', 'otp'] })
+  const token = await new SignJWT({ email: `${who}@e2e.test`, email_verified: true, amr: ['pwd', 'otp'], auth_time: now - (opts.authAgeSeconds ?? 0), sid: `e2e-${who}` })
     .setProtectedHeader({ alg: 'RS256', kid: 'e2e' })
     .setSubject(`sub-${who}`).setIssuer(ISSUER).setAudience('sitedopai-api')
     .setIssuedAt(now).setExpirationTime(now + 3600).sign(key);
