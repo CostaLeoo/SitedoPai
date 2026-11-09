@@ -7,6 +7,6 @@ describe('login de teste (AUTH_MODE=dev)', () => {
     expect(loadConfig(base).AUTH_MODE).toBe('oidc');
   });
   it('é recusado em produção', () => {
-    expect(() => loadConfig({ ...base, AUTH_MODE: 'dev', NODE_ENV: 'production' })).toThrow(/produção/);
+    expect(() => loadConfig({ ...base, AUTH_MODE: 'dev', NODE_ENV: 'production' })).toThrow(/NODE_ENV=production/);
   });
 });
