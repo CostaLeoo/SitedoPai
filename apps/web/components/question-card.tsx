@@ -16,11 +16,14 @@ function needsJustification(q: Question, a: Answer) {
 }
 
 export function QuestionCard(props: {
-  aprId: string;
+  /** Base das rotas de resposta: /aprs/:id ou /work-permits/:id. */
+  basePath: string;
+  /** Só a APR tem fotos por pergunta, por enquanto. */
+  photoAprId?: string;
   question: Question;
   total: number;
   answer?: AnswerRow;
-  photos: Photo[];
+  photos?: Photo[];
   editable: boolean;
   userId: string;
   onChange: () => void;
@@ -47,7 +50,7 @@ export function QuestionCard(props: {
   async function send(next: { answer: Answer; justification: string; correctiveAction: string }) {
     setSave({ kind: 'saving' });
     try {
-      const r = await api<{ version: number }>(`/aprs/${props.aprId}/answers/${q.id}`, 'PUT', {
+      const r = await api<{ version: number }>(`${props.basePath}/answers/${q.id}`, 'PUT', {
         answer: next.answer,
         justification: next.justification || null,
         correctiveAction: next.correctiveAction || null,
@@ -142,7 +145,7 @@ export function QuestionCard(props: {
         <Reassess {...props} version={version} />
       )}
 
-      {q.photosMax > 0 && <Photos {...props} />}
+      {props.photoAprId && q.photosMax > 0 && <Photos {...props} photos={props.photos ?? []} aprId={props.photoAprId} />}
     </article>
   );
 }
@@ -159,7 +162,7 @@ function SaveIndicator({ state, onRetry }: { state: SaveState; onRetry?: () => v
   );
 }
 
-function Reassess(props: { aprId: string; question: Question; answer?: AnswerRow; editable: boolean; userId: string; onChange: () => void; version: { current?: number } }) {
+function Reassess(props: { basePath: string; question: Question; answer?: AnswerRow; editable: boolean; userId: string; onChange: () => void; version: { current?: number } }) {
   const a = props.answer!;
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -170,7 +173,7 @@ function Reassess(props: { aprId: string; question: Question; answer?: AnswerRow
     setBusy(true);
     setError(null);
     try {
-      await api(`/aprs/${props.aprId}/answers/${props.question.id}/reassess`, 'POST', { answer, version: props.version.current });
+      await api(`${props.basePath}/answers/${props.question.id}/reassess`, 'POST', { answer, version: props.version.current });
       props.onChange();
     } catch (e) {
       setError(e instanceof ApiError ? e.message : 'Não foi possível registrar.');

@@ -2,13 +2,15 @@
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { Banner } from '@/components/ui';
-import { auth } from '@/lib/auth';
+import { auth, safeReturnPath } from '@/lib/auth';
 
 export default function Callback() {
   const router = useRouter();
   const [error, setError] = useState(false);
   useEffect(() => {
-    auth().signinRedirectCallback().then(() => router.replace('/aprs')).catch(() => setError(true));
+    auth().signinRedirectCallback()
+      .then((u) => router.replace(safeReturnPath((u.state as { returnTo?: string } | undefined)?.returnTo)))
+      .catch(() => setError(true));
   }, [router]);
   return (
     <main className="mx-auto max-w-screen-sm p-6">

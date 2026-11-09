@@ -127,7 +127,7 @@ export class WorkPermitsController {
           requiresGasMonitoring: f.type.requires_gas_monitoring, gasParameters: f.type.gas_parameters, gasMaxAgeMinutes: f.type.gas_max_age_minutes,
           requiresEntryLog: f.type.requires_entry_log, requirements: f.requirements.map((r) => ({ function: r.function, minCount: r.min_count })) },
         apr: f.apr,
-        team: f.team.map((m) => ({ id: m.id, workerId: m.worker_id, name: m.full_name, function: m.function, acknowledged: !!m.acknowledged_signature_id, hasAccount: !!m.user_id })),
+        team: f.team.map((m) => ({ id: m.id, workerId: m.worker_id, userId: m.user_id, name: m.full_name, function: m.function, acknowledged: !!m.acknowledged_signature_id, hasAccount: !!m.user_id })),
         questions: f.questions.map((q) => ({ id: q.id, position: q.position, text: q.text, expectedAnswer: q.expected_answer, criticality: q.criticality,
           required: q.required, allowNa: q.allow_na, justificationOn: q.justification_on, mismatchEffect: q.mismatch_effect, normativeRef: q.normative_ref })),
         answers: f.answers.map((a) => ({ questionId: a.question_id, answer: a.answer, justification: a.justification, correctiveAction: a.corrective_action,
@@ -376,7 +376,7 @@ export class WorkPermitsController {
       await audit(tx, t.tenantId, { actorUserId: auth.userId, action: 'pt.measure', entityType: 'work_permit', entityId: id, data: { ...input, withinLimits: within } });
       // Fora do limite com a PT em vigor: suspende na hora. Parar é sempre o lado seguro.
       if (!within && (pt.status === 'RELEASED' || pt.status === 'IN_EXECUTION')) {
-        await this.setStatus(tx, id, pt.row_version, 'SUSPENDED', { suspended_at: new Date(), status_reason: `${param.label} fora dos limites (${input.value} ${param.unit})` });
+        await this.setStatus(tx, id, pt.row_version, 'SUSPENDED', { suspended_at: new Date(), status_reason: `${param.label} fora dos limites (${input.value.toLocaleString("pt-BR")} ${param.unit})` });
         await audit(tx, t.tenantId, { actorUserId: auth.userId, action: 'pt.suspend_auto', entityType: 'work_permit', entityId: id, data: { parameter: param.key, value: input.value } });
         return { ...m, suspended: true };
       }

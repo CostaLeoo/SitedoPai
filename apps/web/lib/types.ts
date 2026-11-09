@@ -38,3 +38,22 @@ export interface Check {
   ready: boolean; blocking: { code: string; message: string; questionId?: string; stepId?: string; hazardId?: string }[];
   warnings: { code: string; message: string; questionId?: string }[]; progress: { answered: number; total: number };
 }
+
+export type PtStatus = 'DRAFT' | 'IN_ANALYSIS' | 'AWAITING_CORRECTION' | 'AWAITING_APPROVAL' | 'RELEASED' | 'IN_EXECUTION'
+  | 'SUSPENDED' | 'CLOSED' | 'REJECTED' | 'CANCELLED' | 'EXPIRED';
+export type TeamFunction = 'RESPONSIBLE' | 'EXECUTOR' | 'ENTRY_SUPERVISOR' | 'ATTENDANT' | 'RESCUE';
+export interface GasParameter { key: string; label: string; unit: string; min?: number; max?: number }
+export interface Pt {
+  id: string; number: string; status: PtStatus; row_version: number; unit_id: string; location: string; description: string;
+  starts_at: string; ends_at: string; created_by: string; status_reason: string | null; released_by: string | null;
+  validity: { valid: boolean; reason: string | null };
+  type: { id: string; name: string; version: number; maxValidityMinutes: number; requiresGasMonitoring: boolean; gasParameters: GasParameter[];
+    gasMaxAgeMinutes: number | null; requiresEntryLog: boolean; requirements: { function: TeamFunction; minCount: number }[] };
+  apr: { id: string; number: string; revision: number; status: string };
+  team: { id: string; workerId: string; userId: string | null; name: string; function: TeamFunction; acknowledged: boolean; hasAccount: boolean }[];
+  questions: Question[]; answers: AnswerRow[];
+  measurements: { id: string; parameterKey: string; value: number; unit: string; withinLimits: boolean; instrument: string; receivedAt: string }[];
+  entries: { id: string; worker_id: string; full_name: string; entered_at: string; exited_at: string | null }[];
+  signatures: { id: string; meaning: string; signerName: string; signedAt: string; hash: string }[];
+}
+export interface PtCheck extends Check { stage: 'submit' | 'release' | 'resume' }

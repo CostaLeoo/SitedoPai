@@ -20,7 +20,8 @@ export const PERMISSIONS = {
   'apr.read': ['COMPANY_ADMIN', 'SST', 'SUPERVISOR', 'EXECUTOR', 'AUDITOR'],
   'apr.write': ['SST', 'SUPERVISOR', 'EXECUTOR'],
   'apr.approve': ['SST', 'SUPERVISOR'],
-  'people.read': ['COMPANY_ADMIN', 'SST', 'SUPERVISOR', 'AUDITOR'],
+  // Executante monta a equipe da PT, então precisa ver o cadastro de trabalhadores.
+  'people.read': ['COMPANY_ADMIN', 'SST', 'SUPERVISOR', 'EXECUTOR', 'AUDITOR'],
   'people.write': ['COMPANY_ADMIN', 'SST'],
   'pt_type.write': ['SST'],
   'pt_type.review': ['SST'],
