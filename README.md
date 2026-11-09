@@ -9,7 +9,9 @@ e Permissão de Trabalho (PT), destinada a empresas brasileiras.
 **Situação:** Fase 1 (Fundação), Fase 2 (APR), Fase 3 (Permissão de
 Trabalho), Fase 4 (PDF com QR Code, arquivamento e guarda) e Fase 5
 (comercial: planos, assinaturas, cobrança e exportação), com backend e telas no
-celular, implementadas e testadas localmente. Não está pronto para produção (ver
+celular, implementadas e testadas localmente. Fase 6 (homologação): parte
+técnica feita (segurança, carga, backup e restauração); validação de SST,
+revisão jurídica e piloto pendentes — ver [docs/homologacao](docs/homologacao/README.md). Não está pronto para produção (ver
 *Pendências*).
 
 ## Documentos
@@ -76,6 +78,7 @@ pnpm test
 | `apps/api/test/documents.test.ts` | 14 | PDF da APR e da PT (texto, CNPJ, situação na emissão, aviso de PT sem validade, PDF/A declarado, estrutura válida), hash do arquivo, emissões imutáveis, arquivo adulterado não é entregue, auditoria de download, verificação pública sem dados pessoais, regras de guarda, retenção especial e cálculo de elegibilidade |
 | `apps/api/test/dev-login.test.ts` | 2 | Login de teste desligado por padrão e recusado em produção |
 | `apps/api/test/billing.test.ts` | 14 | Planos (só a plataforma, também no banco), contratação com tolerância obrigatória, limite de unidades, webhook (assinatura HMAC, tempo, adulteração, repetição), tolerância → somente consulta → ativa, ações de segurança da PT liberadas em somente consulta, cobrança e assinatura imutáveis, visão da plataforma sem conteúdo, cancelamento e encerramento sem apagar nada, exportação completa (PDFs, fotos originais, manifesto com hashes, CSV protegido) |
+| `apps/api/test/pagination.test.ts` | 1 | Paginação por cursor sem perder nem repetir itens (empates de data) |
 | `apps/api/test/cross-tenant.test.ts` | 92 | Lê a lista real de rotas da API (109) e tenta ler, alterar e criar dados da empresa B como administrador e como SST da A. Rota nova sem caso de teste faz a suíte falhar |
 
 ### Testes de ponta a ponta (site)
@@ -236,8 +239,6 @@ a integração real depende da escolha do provedor.
 - Login real pelo Keycloak no site ainda não foi testado (só com token simulado).
 - Sem modo offline: sem sinal, o que foi digitado fica na tela e o salvamento
   pode ser repetido, mas não há fila local (planejado para fase futura).
-- CSP do site ainda usa `'unsafe-inline'` para scripts; trocar por nonce na
-  implantação.
 - Antivírus (ClamAV) para anexos: hoje toda foto fica com `scan_status = PENDING`;
   a decodificação e a regravação já barram arquivos que não são imagem.
 - Nenhum modelo vem como "aprovado": o seed traz matriz e modelo de EXEMPLO em

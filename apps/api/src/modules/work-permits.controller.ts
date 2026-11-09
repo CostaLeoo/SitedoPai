@@ -1,4 +1,5 @@
-import { BadRequestException, Body, Controller, Get, HttpCode, Param, Patch, Post, Put, UnprocessableEntityException } from '@nestjs/common';
+import { PAGE_SIZE } from './aprs.controller';
+import { BadRequestException, Body, Controller, Get, HttpCode, Param, Patch, Post, Put, Query, UnprocessableEntityException } from '@nestjs/common';
 import { z } from 'zod';
 import { ANSWERS, audit, GasParameter, PtStatus, sql, TEAM_FUNCTIONS, Tx } from '@sitedopai/db';
 import { canOnUnit, unitScope } from '../authz/permissions';
@@ -102,11 +103,13 @@ export class WorkPermitsController {
 
   @Get()
   @RequirePermission('pt.read')
-  list(@Auth() auth: AuthContext, @Tenant() t: TenantContext) {
+  list(@Auth() auth: AuthContext, @Tenant() t: TenantContext, @Query() query: unknown) {
+    const { before, beforeId } = parse(z.object({ before: z.string().datetime({ offset: true }).optional(), beforeId: z.string().uuid().optional() }), query);
     const scope = unitScope(t.assignments, 'pt.read');
     return this.run(auth, t, async (tx) => {
       let q = tx.selectFrom('work_permits').select(['id', 'number', 'status', 'unit_id', 'location', 'description', 'starts_at', 'ends_at', 'updated_at'])
-        .orderBy('starts_at', 'desc').limit(200);
+        .orderBy('starts_at', 'desc').orderBy('id', 'desc').limit(PAGE_SIZE);
+      if (before && beforeId) q = q.where(sql<boolean>`(starts_at, id) < (${before}::timestamptz, ${beforeId}::uuid)`);
       if (!scope.all) q = scope.unitIds.length ? q.where('unit_id', 'in', scope.unitIds) : q.where(sql<boolean>`false`);
       const rows = await q.execute();
       return rows.map((r) => ({ ...r, validity: this.svc.validity(r) }));
