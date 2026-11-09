@@ -18,6 +18,8 @@ const schema = z.object({
   S3_BUCKET: z.string().optional(),
   S3_REGION: z.string().default('sa-east-1'),
   S3_ENDPOINT: z.string().url().optional(),
+  /** Endereço público do frontend usado no QR Code de verificação. */
+  PUBLIC_VERIFY_BASE_URL: z.string().url().default('http://localhost:3000'),
 });
 
 export type AppConfig = z.infer<typeof schema> & { mfaAmrValues: string[]; corsOrigins: string[] };
