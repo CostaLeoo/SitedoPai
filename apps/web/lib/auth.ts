@@ -57,6 +57,7 @@ export async function reauthenticate(returnTo: string) {
 export const DEV_USERS = [
   { email: 'admin@sitedopai.local', label: 'Ana — administradora da empresa' },
   { email: 'sst@sitedopai.local', label: 'Sérgio — SST' },
+  { email: 'sst2@sitedopai.local', label: 'Silvia — SST e vigia (modo demonstração)' },
   { email: 'supervisor@sitedopai.local', label: 'Sueli — supervisora' },
   { email: 'executante@sitedopai.local', label: 'Edson — executante' },
   { email: 'plataforma@sitedopai.local', label: 'Paula — administradora da plataforma' },

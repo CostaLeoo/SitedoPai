@@ -33,22 +33,29 @@ scripts           Criação do banco e dos papéis
 docs              Especificação, modelo de dados, decisões (ADRs)
 ```
 
-## Como rodar localmente
+## Como testar no seu computador
 
-Requisitos: Node 22, pnpm 10 e Docker (ou um PostgreSQL 16 instalado).
+Instale uma vez: [Node.js 22](https://nodejs.org), [Docker Desktop](https://www.docker.com/products/docker-desktop/),
+[Git](https://git-scm.com) e o pnpm (`npm install -g pnpm@10`). Abra o Docker Desktop.
 
 ```bash
+git clone -b fase-6-homologacao https://github.com/CostaLeoo/SitedoPai.git
+cd SitedoPai
+cp .env.example .env                                  # Windows: copy .env.example .env
+cp apps/web/.env.example apps/web/.env.local          # Windows: copy apps\web\.env.example apps\web\.env.local
 pnpm install
-cp .env.example .env                    # no Windows: copy .env.example .env
-cp apps/web/.env.example apps/web/.env.local
-docker compose up -d postgres           # só o banco; o Keycloak não é necessário no modo de teste
-PGHOST=localhost PGUSER=postgres PGPASSWORD=postgres pnpm db:setup
-pnpm db:migrate
-pnpm db:seed                            # dados fictícios
-pnpm dev                                # API em http://localhost:3001
-# em outro terminal:
-pnpm --filter @sitedopai/web dev        # site em http://localhost:3000
+docker compose up -d postgres                         # banco (os papéis são criados sozinhos)
+pnpm demo:setup                                       # tabelas + dados fictícios + modo demonstração
+pnpm dev                                              # API em http://localhost:3001 (deixe aberto)
 ```
+
+Num **segundo terminal**, na mesma pasta: `pnpm dev:web`. Abra **http://localhost:3000**.
+
+O **modo demonstração** publica uma matriz, um modelo de APR e um tipo de PT
+marcados "DEMONSTRAÇÃO — sem validação profissional", com valores fictícios,
+só para percorrer o fluxo. Nunca use em atividade real.
+
+Para recomeçar do zero: `docker compose down -v`, depois `docker compose up -d postgres` e `pnpm demo:setup`.
 
 ### Login de teste (sem Keycloak)
 
