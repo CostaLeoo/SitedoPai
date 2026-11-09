@@ -12,11 +12,13 @@ import { createWorld, destroyWorld, token, World } from './setup';
 let w: World;
 let http: ReturnType<typeof request>;
 let authA: string;
+let sstA: string;
 
 beforeAll(async () => {
   w = await createWorld();
   http = request(w.app.getHttpServer());
   authA = `Bearer ${await token({ sub: 'sub-adminA' })}`;
+  sstA = `Bearer ${await token({ sub: 'sub-sstA' })}`;
 });
 afterAll(async () => destroyWorld(w));
 
@@ -25,6 +27,10 @@ const OUTSIDE_TENANT = new Set(['GET /health', 'GET /me', 'GET /platform/tenants
 type Case = (http: ReturnType<typeof request>) => Promise<void>;
 const A = () => w.ids.alfa!;
 const asA = (r: request.Test) => r.set('Authorization', authA).set('X-Tenant-Id', A());
+/** Atacante com permissão de escrita em SST e APR na empresa A inteira. */
+const asSst = (r: request.Test) => r.set('Authorization', sstA).set('X-Tenant-Id', A());
+const B = (k: string) => w.ids[k]!;
+const SECRET = 'Segredo da Beta';
 const bodyHasNo = (body: unknown, values: string[]) => {
   const text = JSON.stringify(body);
   for (const v of values) expect(text).not.toContain(v);
@@ -72,6 +78,103 @@ const CASES: Record<string, Case> = {
       expect([w.ids.unitB1, w.ids.sectorB1, w.ids.m_adminB]).not.toContain(e.entity_id);
     }
   },
+  // ---- Fase 2a: matriz, modelos, biblioteca, APR, fotos ----
+  'GET /risk-matrices': async () => {
+    bodyHasNo((await asSst(http.get('/risk-matrices')).expect(200)).body, [B('matrixB'), 'Matriz Beta']);
+  },
+  'POST /risk-matrices': async () => {
+    const { MATRIX } = await import('./setup');
+    await asSst(http.post('/risk-matrices')).send({ ...MATRIX, name: 'Matriz Beta', tenantId: B('beta') }).expect(400);
+  },
+  'POST /risk-matrices/:id/publish': async () => {
+    await asSst(http.post(`/risk-matrices/${B('matrixB')}/publish`)).expect(404);
+  },
+  'GET /apr-templates': async () => {
+    bodyHasNo((await asSst(http.get('/apr-templates')).expect(200)).body, [B('templateB'), 'Altura Beta']);
+  },
+  'POST /apr-templates': async () => {
+    await asSst(http.post('/apr-templates')).send({ name: 'X', serviceType: 'x', tenant_id: B('beta') }).expect(400);
+  },
+  'POST /apr-templates/:id/versions': async () => {
+    await asSst(http.post(`/apr-templates/${B('templateB')}/versions`)).expect(404);
+  },
+  'GET /apr-template-versions/:id': async () => {
+    await asSst(http.get(`/apr-template-versions/${B('versionB')}`)).expect(404);
+  },
+  'PUT /apr-template-versions/:id/questions': async () => {
+    await asSst(http.put(`/apr-template-versions/${B('versionB')}/questions`)).send({ questions: [{
+      text: 'x', expectedAnswer: 'YES', criticality: 'LOW', required: true, allowNa: false, justificationOn: [],
+      photosRequired: 0, photosMax: 0, mismatchEffect: 'ALERT' }] }).expect(404);
+  },
+  'POST /apr-template-versions/:id/submit': async () => {
+    await asSst(http.post(`/apr-template-versions/${B('versionB')}/submit`)).expect(400);
+  },
+  'POST /apr-template-versions/:id/review': async () => {
+    await asSst(http.post(`/apr-template-versions/${B('versionB')}/review`)).send({ approve: false, note: 'x' }).expect(404);
+  },
+  'GET /hazard-library': async () => {
+    await asSst(http.get('/hazard-library?q=%25')).expect(200);
+  },
+  'POST /hazard-library': async () => {
+    await asSst(http.post('/hazard-library')).send({ hazard: 'h', consequence: 'c', suggestedControls: [], tenantId: B('beta') }).expect(400);
+  },
+  'GET /aprs': async () => {
+    bodyHasNo((await asSst(http.get('/aprs')).expect(200)).body, [B('aprB'), SECRET]);
+  },
+  'POST /aprs': async () => {
+    // Referências da empresa B: o banco não as enxerga, então a criação falha.
+    await asSst(http.post('/aprs')).send({ templateVersionId: B('versionB'), riskMatrixId: B('matrixB'), unitId: B('unitB1'), activityDate: '2026-11-12' }).expect(400);
+  },
+  'GET /aprs/:id': async () => {
+    await asSst(http.get(`/aprs/${B('aprB')}`)).expect(404);
+  },
+  'PATCH /aprs/:id': async () => {
+    await asSst(http.patch(`/aprs/${B('aprB')}`)).send({ rowVersion: 1, location: 'invadido' }).expect(404);
+  },
+  'PUT /aprs/:id/answers/:questionId': async () => {
+    await asSst(http.put(`/aprs/${B('aprB')}/answers/${B('questionB')}`)).send({ answer: 'NO', version: 1 }).expect(404);
+  },
+  'POST /aprs/:id/answers/:questionId/reassess': async () => {
+    await asSst(http.post(`/aprs/${B('aprB')}/answers/${B('questionB')}/reassess`)).send({ answer: 'YES', version: 1 }).expect(404);
+  },
+  'PUT /aprs/:id/analysis': async () => {
+    await asSst(http.put(`/aprs/${B('aprB')}/analysis`)).send({ analysisVersion: 1, steps: [] }).expect(404);
+  },
+  'GET /aprs/:id/check': async () => {
+    await asSst(http.get(`/aprs/${B('aprB')}/check`)).expect(404);
+  },
+  'POST /aprs/:id/submit': async () => {
+    await asSst(http.post(`/aprs/${B('aprB')}/submit`)).expect(404);
+  },
+  'POST /aprs/:id/approve': async () => {
+    await asSst(http.post(`/aprs/${B('aprB')}/approve`)).send({}).expect(404);
+  },
+  'POST /aprs/:id/return': async () => {
+    await asSst(http.post(`/aprs/${B('aprB')}/return`)).send({ note: 'x' }).expect(404);
+  },
+  'POST /aprs/:id/cancel': async () => {
+    await asSst(http.post(`/aprs/${B('aprB')}/cancel`)).send({ note: 'x' }).expect(404);
+  },
+  'POST /aprs/:id/revise': async () => {
+    await asSst(http.post(`/aprs/${B('aprB')}/revise`)).expect(404);
+  },
+  'GET /aprs/:id/history': async () => {
+    await asSst(http.get(`/aprs/${B('aprB')}/history`)).expect(404);
+  },
+  'POST /aprs/:id/questions/:questionId/photos': async () => {
+    const sharp = (await import('sharp')).default;
+    const img = await sharp({ create: { width: 10, height: 10, channels: 3, background: '#000' } }).jpeg().toBuffer();
+    await asSst(http.post(`/aprs/${B('aprB')}/questions/${B('questionB')}/photos`)).attach('file', img, 'a.jpg').expect(404);
+  },
+  'GET /aprs/:id/photos/:photoId': async () => {
+    await asSst(http.get(`/aprs/${B('aprB')}/photos/${B('photoB')}`)).expect(404);
+  },
+  'GET /aprs/:id/photos/:photoId/original': async () => {
+    await asSst(http.get(`/aprs/${B('aprB')}/photos/${B('photoB')}/original`)).expect(404);
+  },
+  'DELETE /aprs/:id/photos/:photoId': async () => {
+    await asSst(http.delete(`/aprs/${B('aprB')}/photos/${B('photoB')}`)).expect(404);
+  },
   'GET /audit-events/verify': async () => {
     const before = await asA(http.get('/audit-events/verify')).expect(200);
     const authB = `Bearer ${await token({ sub: 'sub-adminB' })}`;
@@ -108,5 +211,11 @@ describe('isolamento entre empresas em todas as rotas', () => {
     expect(members.body.map((m: { status: string }) => m.status)).toEqual(['ACTIVE']);
     const sectors = await http.get(`/units/${w.ids.unitB1}/sectors`).set('Authorization', authB).set('X-Tenant-Id', w.ids.beta!).expect(200);
     expect(sectors.body.map((s: { name: string }) => s.name)).toEqual(['Manutenção']);
+    const apr = await http.get(`/aprs/${B('aprB')}`).set('Authorization', authB).set('X-Tenant-Id', w.ids.beta!).expect(200);
+    expect(apr.body).toMatchObject({ status: 'DRAFT', location: 'Telhado Beta', rowVersion: 1, analysisVersion: 1 });
+    expect(apr.body.answers.map((a: { answer: string }) => a.answer)).toEqual(['YES']);
+    expect(apr.body.photos).toHaveLength(1);
+    const versions = await http.get('/apr-templates').set('Authorization', authB).set('X-Tenant-Id', w.ids.beta!).expect(200);
+    expect(versions.body[0].versions.map((v: { status: string }) => v.status)).toEqual(['PUBLISHED']);
   });
 });

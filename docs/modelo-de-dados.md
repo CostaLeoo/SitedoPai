@@ -71,3 +71,36 @@ erDiagram
 O primeiro evento de cada empresa usa `prev_hash` igual a 64 zeros. A rota
 `GET /audit-events/verify` recalcula a cadeia e aponta o primeiro elo quebrado.
 Na Fase 4, o hash mais recente será ancorado periodicamente com carimbo de tempo.
+
+---
+
+# Fase 2a — APR
+
+| Tabela | Finalidade | Regras no banco |
+| --- | --- | --- |
+| `risk_matrices` | Metodologia de avaliação (níveis de probabilidade e severidade, classes por pontuação, aceitabilidade) | Versionada; publicada é imutável |
+| `apr_templates` / `apr_template_versions` | Modelo por tipo de serviço e suas versões | Publicar exige revisor ≠ autor e identificação do profissional que validou; publicada é imutável; ao publicar, a anterior é aposentada |
+| `apr_template_questions` | Perguntas Sim/Não/N/A com metadados: resposta esperada, criticidade, obrigatoriedade, N/A permitido, quando exige justificativa, fotos (mín./máx., até 5), efeito da divergência (alerta, pendência, bloqueio), referência normativa | Só mudam com a versão em rascunho; pergunta crítica precisa bloquear |
+| `hazard_library` | Biblioteca de perigos e controles sugeridos | Apoio; não substitui a análise da atividade |
+| `aprs` | APR: cabeçalho, equipe, equipamentos, terceiros, situação, revisão | Só nasce de modelo e matriz publicados; aprovada/cancelada é imutável; nunca é apagada; aprovador ≠ criador; número sequencial por empresa e ano |
+| `apr_answers` | Resposta, justificativa, ação corretiva, nova avaliação | Nova avaliação por pessoa diferente; só muda com APR em edição |
+| `apr_steps` / `apr_hazards` / `apr_controls` | Etapas → perigos (risco inicial e residual) → controles (hierarquia: eliminação, substituição, engenharia, administrativo, EPI) | Só mudam com APR em edição |
+| `apr_photos` | Original (hash SHA-256, horário de recebimento no servidor) e cópia de exibição sem metadados | Máx. por pergunta com lock contra corrida; nunca apagada (remoção lógica); dados do arquivo imutáveis |
+
+## Fluxo da APR
+
+`DRAFT → IN_REVIEW → APPROVED`, com `IN_REVIEW → RETURNED → IN_REVIEW` e `CANCELLED`
+antes da aprovação. Mudança em APR aprovada = nova revisão (mesmo número, revisão + 1),
+que copia cabeçalho, respostas e análise, mas **não** copia fotos nem novas avaliações:
+a condição de campo precisa ser registrada de novo.
+
+## O que bloqueia o envio e a aprovação
+
+Cabeçalho incompleto; pergunta obrigatória sem resposta; N/A onde não é permitido;
+justificativa faltando; fotos abaixo do mínimo; divergência com efeito "pendência"
+sem ação corretiva; divergência com efeito "bloqueio" sem ação corretiva **e** nova
+avaliação favorável feita por outra pessoa; etapa sem perigo; perigo sem avaliação,
+sem controle ou sem risco residual; risco residual em classe não aceitável.
+
+Divergência com efeito "alerta" e risco residual maior que o inicial geram avisos,
+sem bloquear. O sistema nunca aprova sozinho: a verificação só impede o avanço.

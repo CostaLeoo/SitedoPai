@@ -40,6 +40,37 @@ async function main() {
       const grants: [string, 'COMPANY_ADMIN' | 'SST' | 'SUPERVISOR' | 'EXECUTOR', string | null][] = [
         [admin!.id, 'COMPANY_ADMIN', null], [sst!.id, 'SST', null], [sup!.id, 'SUPERVISOR', u1!.id], [exec!.id, 'EXECUTOR', u1!.id],
       ];
+      // Matriz e modelo de EXEMPLO em rascunho: só viram uso operacional depois
+      // que o SST da empresa revisar e publicar, identificando o profissional.
+      await tx.insertInto('risk_matrices').values({
+        tenant_id: tenant.id, name: 'Matriz 5×5 (exemplo — revisar)', created_by: sst!.id,
+        probability_levels: JSON.stringify(['Rara', 'Improvável', 'Possível', 'Provável', 'Quase certa'].map((label, i) => ({ value: i + 1, label }))),
+        severity_levels: JSON.stringify(['Leve', 'Moderada', 'Séria', 'Grave', 'Catastrófica'].map((label, i) => ({ value: i + 1, label }))),
+        classes: JSON.stringify([
+          { min: 1, max: 4, label: 'Baixo', acceptable: true }, { min: 5, max: 9, label: 'Médio', acceptable: true },
+          { min: 10, max: 14, label: 'Alto', acceptable: false }, { min: 15, max: 25, label: 'Crítico', acceptable: false },
+        ]),
+      }).execute();
+      const tpl = await tx.insertInto('apr_templates').values({ tenant_id: tenant.id, name: 'Exemplo — trabalho em altura (não validado)', service_type: 'altura', created_by: sst!.id })
+        .returning('id').executeTakeFirstOrThrow();
+      const ver = await tx.insertInto('apr_template_versions').values({ tenant_id: tenant.id, template_id: tpl.id, version: 1, author_id: sst!.id })
+        .returning('id').executeTakeFirstOrThrow();
+      const qs: [string, 'YES' | 'NO', 'MEDIUM' | 'HIGH' | 'CRITICAL', 'ALERT' | 'PENDING' | 'BLOCK', number, number, boolean][] = [
+        ['Os equipamentos de proteção individual exigidos foram verificados?', 'YES', 'HIGH', 'PENDING', 1, 3, false],
+        ['A área de trabalho está devidamente sinalizada e isolada?', 'YES', 'CRITICAL', 'BLOCK', 1, 5, false],
+        ['Os trabalhadores possuem as autorizações necessárias?', 'YES', 'CRITICAL', 'BLOCK', 0, 0, false],
+        ['Há linhas elétricas energizadas próximas ao local?', 'NO', 'HIGH', 'PENDING', 0, 2, true],
+      ];
+      await tx.insertInto('apr_template_questions').values(qs.map(([text, expected, crit, effect, req, max, na], i) => ({
+        tenant_id: tenant.id, template_version_id: ver.id, position: i + 1, text, expected_answer: expected, criticality: crit,
+        mismatch_effect: effect, photos_required: req, photos_max: max, allow_na: na,
+      }))).execute();
+      await tx.insertInto('hazard_library').values([
+        { tenant_id: tenant.id, hazard: 'Queda de altura', consequence: 'Lesões graves ou morte', tags: ['altura'],
+          suggested_controls: JSON.stringify([{ description: 'Proteção coletiva (guarda-corpo, linha de vida)', type: 'ENGINEERING' }, { description: 'Cinto tipo paraquedista com talabarte duplo', type: 'PPE' }]) },
+        { tenant_id: tenant.id, hazard: 'Choque elétrico', consequence: 'Queimaduras, parada cardiorrespiratória', tags: ['elétrico'],
+          suggested_controls: JSON.stringify([{ description: 'Desenergização com bloqueio e etiquetagem', type: 'ELIMINATION' }]) },
+      ]).execute();
       for (const [userId, role, unitId] of grants) {
         const m = await tx.insertInto('memberships').values({ tenant_id: tenant.id, user_id: userId, status: 'INVITED' }).returning('id').executeTakeFirstOrThrow();
         await tx.insertInto('role_assignments').values({ tenant_id: tenant.id, membership_id: m.id, role, scope_type: unitId ? 'UNIT' : 'TENANT', unit_id: unitId }).execute();
