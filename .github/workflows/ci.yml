@@ -33,3 +33,7 @@ jobs:
       - run: pnpm typecheck
       - run: pnpm test
       - run: pnpm build
+      - name: Testes de ponta a ponta (Chrome)
+        run: cd apps/web && npx playwright test
+        env:
+          CHROME_PATH: /usr/bin/google-chrome

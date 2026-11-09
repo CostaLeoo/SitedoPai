@@ -6,9 +6,9 @@ e Permissão de Trabalho (PT), destinada a empresas brasileiras.
 > Princípio fundamental: a segurança dos trabalhadores tem prioridade sobre a
 > velocidade de preenchimento e liberação.
 
-**Situação:** Fase 1 (Fundação) e Fase 2a (backend da APR) implementadas e
-testadas localmente. Telas da APR (Fase 2b) ainda não existem. Não está pronto
-para produção (ver *Pendências*).
+**Situação:** Fase 1 (Fundação) e Fase 2 (APR: backend e telas no celular)
+implementadas e testadas localmente. Não está pronto para produção (ver
+*Pendências*).
 
 ## Documentos
 
@@ -21,6 +21,7 @@ para produção (ver *Pendências*).
 ## Estrutura
 
 ```
+apps/web          Site Next.js (mobile-first): login OIDC, lista e editor de APR
 apps/api          API NestJS (autenticação OIDC, empresa ativa, permissões, rotas)
 packages/db       Migrações SQL, tipos Kysely, contexto RLS, auditoria, seed
 infra/keycloak    Realm de desenvolvimento do Keycloak
@@ -40,6 +41,8 @@ PGHOST=localhost PGUSER=postgres PGPASSWORD=postgres pnpm db:setup   # banco + p
 pnpm db:migrate                                        # aplica migrations/*.sql
 pnpm db:seed                                           # dados fictícios de demonstração
 pnpm dev                                               # API em http://localhost:3001
+cp apps/web/.env.example apps/web/.env.local
+pnpm --filter @sitedopai/web dev                       # site em http://localhost:3000
 ```
 
 Usuários de demonstração no Keycloak (http://localhost:8080, realm `sitedopai`):
@@ -65,6 +68,25 @@ pnpm test
 | `packages/db/test/apr-triggers.test.ts` | 7 | Travas da APR no banco: publicação com revisor e validação profissional, imutabilidade de modelo, matriz e APR aprovada, limite e preservação de fotos, numeração |
 | `apps/api/test/apr.test.ts` | 38 | Matriz, ciclo do modelo (revisão por outra pessoa), preenchimento, "Sim" que não é seguro, pergunta crítica com nova avaliação, fotos (arquivo disfarçado, imagem corrompida, HEIC, EXIF/GPS removido, original íntegro, limite com envios simultâneos), análise de riscos, envio, aprovação, devolução, cancelamento, revisão, histórico |
 | `apps/api/test/cross-tenant.test.ts` | 43 | Lê a lista real de rotas da API (45) e tenta ler, alterar e criar dados da empresa B como administrador e como SST da A. Rota nova sem caso de teste faz a suíte falhar |
+
+### Testes de ponta a ponta (site)
+
+```bash
+pnpm build                                  # API e site compilados
+cd apps/web && npx playwright test          # usa o Chrome instalado (CHROME_PATH)
+```
+
+`apps/web/e2e/apr.spec.ts` (9 cenários, tela de Pixel 7): login obrigatório;
+criação da APR; perguntas uma abaixo da outra com botões de no mínimo 48 px;
+N/A bloqueado onde não é permitido; acessibilidade WCAG 2.2 AA com axe; fotos
+(envio, miniatura, remoção, arquivo falso recusado); pergunta crítica bloqueando
+até a nova avaliação por outra pessoa; "Sim" que não é seguro; análise de riscos
+com classificação na tela; envio; aprovação pelo supervisor; APR travada. O
+login é simulado com tokens assinados por chave de teste (sem Keycloak).
+
+Telas capturadas no teste: [checklist](docs/telas/1-checklist.png) ·
+[pergunta crítica](docs/telas/2-pergunta-critica.png) · [riscos](docs/telas/3-riscos.png) ·
+[pendências](docs/telas/4-pendencias.png) · [lista](docs/telas/5-lista.png)
 
 ## Segurança implementada na Fase 1
 
@@ -114,8 +136,11 @@ intacto, com SHA-256, para prova. HEIC ainda não é aceito (a tela vai converte
 - Validar `docker-compose.yml` e o realm do Keycloak na sua máquina,
   inclusive se o claim `amr` chega no token com o segundo fator.
 - Limite de taxa está em memória; em produção, usar Redis.
-- Fase 2b: telas da APR no celular (formulário vertical Sim/Não/N/A, câmera,
-  salvamento automático, progresso).
+- Login real pelo Keycloak no site ainda não foi testado (só com token simulado).
+- Sem modo offline: sem sinal, o que foi digitado fica na tela e o salvamento
+  pode ser repetido, mas não há fila local (planejado para fase futura).
+- CSP do site ainda usa `'unsafe-inline'` para scripts; trocar por nonce na
+  implantação.
 - Antivírus (ClamAV) para anexos: hoje toda foto fica com `scan_status = PENDING`;
   a decodificação e a regravação já barram arquivos que não são imagem.
 - Nenhum modelo vem como "aprovado": o seed traz matriz e modelo de EXEMPLO em
