@@ -5,11 +5,11 @@ import type { ReactNode } from 'react';
 export function BrandLayout({ children }: { children: ReactNode }) {
   return (
     <div className="grid min-h-dvh lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)]">
-      <section className="flex flex-col justify-between gap-10 bg-navy px-6 py-6 text-white sm:px-10 lg:px-14 lg:py-12" aria-label="SitedoPai">
+      <section className="flex flex-col justify-between gap-10 bg-navy px-6 py-6 text-white sm:px-10 lg:px-14 lg:py-12" aria-label="Vigia">
         <div className="flex items-center gap-3">
           <ShieldCheck aria-hidden size={34} className="text-mint" />
           <span>
-            <strong className="block text-3xl font-bold tracking-tight">SitedoPai</strong>
+            <strong className="block text-3xl font-bold tracking-tight">Vigia</strong>
             <span className="block text-[0.65rem] uppercase tracking-[0.15em] text-navy-text">segurança operacional</span>
           </span>
         </div>

@@ -35,7 +35,7 @@ export default function Verify() {
   return (
     <main className="mx-auto flex min-h-dvh max-w-screen-sm flex-col gap-5 p-6">
       <div>
-        <p className="text-sm font-semibold text-muted">SitedoPai · verificação de documento</p>
+        <p className="text-sm font-semibold text-muted">Vigia · verificação de documento</p>
         <h1 className="mt-1 text-2xl font-bold">{v ? `${isPt ? 'Permissão de Trabalho' : 'APR'} ${v.documentNumber}` : 'Verificação'}</h1>
       </div>
       {state === 'loading' && <p className="text-muted">Consultando…</p>}

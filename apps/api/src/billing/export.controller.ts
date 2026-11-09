@@ -25,7 +25,7 @@ const csv = (rows: Record<string, unknown>[]) => {
 const safeName = (s: string) => s.replace(/[^A-Za-z0-9._-]/g, '_');
 const EXT: Record<string, string> = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/heic': 'heic', 'image/heif': 'heif', 'image/webp': 'webp' };
 
-const README = `EXPORTAÇÃO DE DADOS — SitedoPai
+const README = `EXPORTAÇÃO DE DADOS — Vigia
 
 Conteúdo:
 - dados/*.json: dados completos em JSON (UTF-8).

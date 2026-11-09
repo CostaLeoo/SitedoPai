@@ -105,7 +105,7 @@ function Shell({ session, wide, children }: { session: Session; wide?: boolean; 
       <a href="/painel" className="mb-8 flex items-center gap-3 px-3 text-white">
         <ShieldCheck aria-hidden size={30} className="text-mint" />
         <span>
-          <strong className="block text-2xl font-bold tracking-tight">SitedoPai</strong>
+          <strong className="block text-2xl font-bold tracking-tight">Vigia</strong>
           <span className="block text-[0.65rem] uppercase tracking-[0.15em] text-navy-text">segurança operacional</span>
         </span>
       </a>

@@ -42,7 +42,7 @@ export class Pdf {
     this.doc = new PDFDocument({
       size: 'A4', margins: { top: MARGIN, bottom: MARGIN + 24, left: MARGIN, right: MARGIN },
       bufferPages: true, pdfVersion: '1.7', subset: 'PDF/A-2b', tagged: true, displayTitle: true, lang: 'pt-BR',
-      info: { Title: `${ctx.title} ${ctx.documentNumber}`, Author: ctx.company.legalName, Creator: 'SitedoPai', CreationDate: ctx.issuedAt },
+      info: { Title: `${ctx.title} ${ctx.documentNumber}`, Author: ctx.company.legalName, Creator: 'Vigia', CreationDate: ctx.issuedAt },
     });
     this.doc.registerFont('r', REGULAR);
     this.doc.registerFont('b', BOLD);

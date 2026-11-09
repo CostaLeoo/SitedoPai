@@ -93,7 +93,7 @@ export default function Plataforma() {
     <>
       <header className="sticky top-0 z-10 bg-ink text-white">
         <div className="mx-auto flex max-w-screen-md items-center justify-between px-4 py-3">
-          <span className="font-bold">SitedoPai · Plataforma</span>
+          <span className="font-bold">Vigia · Plataforma</span>
           <button type="button" className="min-h-[44px] px-2 underline underline-offset-4" onClick={() => logout()}>Sair</button>
         </div>
       </header>
