@@ -94,3 +94,17 @@ export async function downloadDocument(id: string, fallbackName: string) {
   a.remove();
   setTimeout(() => URL.revokeObjectURL(url), 10_000);
 }
+
+/** Gera e baixa a exportação completa da empresa (ZIP). */
+export async function downloadExport() {
+  const res = await request('/exports', { method: 'POST' });
+  const name = /filename="([^"]+)"/.exec(res.headers.get('Content-Disposition') ?? '')?.[1] ?? 'exportacao.zip';
+  const url = URL.createObjectURL(await res.blob());
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = name;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 10_000);
+}

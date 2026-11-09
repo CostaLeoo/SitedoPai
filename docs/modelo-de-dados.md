@@ -154,3 +154,21 @@ ICP-Brasil (PAdES) entra quando o parecer jurídico definir onde é exigida.
 - `verify_document(code)` (SECURITY DEFINER): única leitura sem empresa no
   contexto. Devolve só tipo, número, revisão, nome da empresa, data, hash e
   situações (calcula `EXPIRED` para PT vencida).
+
+
+## Fase 5 — comercial
+
+- `plans`: catálogo global (sem empresa). Leitura livre; criação e alteração
+  só pelo administrador da plataforma (política RLS).
+- `subscriptions`: por empresa; preço, nome e limites copiados do plano na
+  contratação e imutáveis; `grace_days` obrigatório; uma não cancelada por
+  empresa; cancelada não muda mais; não pode ser apagada.
+- `invoices`: valor e vencimento imutáveis; paga ou anulada não muda de
+  situação; não pode ser apagada. Só referências do provedor e link de
+  comprovante (https).
+- `billing_events`: avisos recebidos, só campos normalizados e hash do corpo;
+  `(provider, event_id)` único garante processamento único; imutável.
+- `subscriptions` e `invoices` têm RLS sem FORCE (como `tenants`) para que as
+  funções `billing_resolve_tenant`, `billing_sync_tenant` e
+  `platform_billing_overview` (SECURITY DEFINER) funcionem; o papel da
+  aplicação continua filtrado por empresa.

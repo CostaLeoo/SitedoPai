@@ -1,6 +1,6 @@
 import { CanActivate, ExecutionContext, ForbiddenException, Injectable, BadRequestException } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { NO_TENANT, PLATFORM, PUBLIC } from '../common/decorators';
+import { NO_TENANT, PLATFORM, PUBLIC, SAFETY } from '../common/decorators';
 import { audit } from '@sitedopai/db';
 import type { AppRequest } from '../common/request';
 import { PRIVILEGED_ROLES } from '../authz/permissions';
@@ -66,10 +66,11 @@ export class TenantGuard implements CanActivate {
     const assignments = found.assignments.map((a) => ({ role: a.role, scopeType: a.scope_type, unitId: a.unit_id }));
     if (!auth.mfa && assignments.some((a) => PRIVILEGED_ROLES.includes(a.role))) throw mfaRequired();
 
-    if (!SAFE_METHODS.has(req.method) && (found.m.tenant_status === 'READ_ONLY' || found.m.tenant_status === 'CLOSED')) {
+    const restricted = found.m.tenant_status === 'READ_ONLY' || found.m.tenant_status === 'CLOSED';
+    if (restricted && !SAFE_METHODS.has(req.method) && !this.reflector.getAllAndOverride<boolean>(SAFETY, targets)) {
       throw new ForbiddenException({
         code: 'TENANT_READ_ONLY',
-        message: 'A conta da empresa está em modo somente leitura. Os documentos continuam disponíveis para consulta.',
+        message: 'A conta da empresa está em modo somente leitura. Consultas, exportação e ações de segurança das PTs em andamento (suspender, registrar saída, medir gás, encerrar) continuam disponíveis.',
       });
     }
 

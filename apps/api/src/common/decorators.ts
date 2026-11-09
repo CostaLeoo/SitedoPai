@@ -6,7 +6,15 @@ export const PUBLIC = 'route:public';
 export const NO_TENANT = 'route:no-tenant';
 export const PLATFORM = 'route:platform';
 export const PERMISSION = 'route:permission';
+export const SAFETY = 'route:safety';
 
+/**
+ * Ação de segurança ou de preservação que continua permitida com a empresa em
+ * modo somente leitura ou encerrada (ex.: suspender PT, registrar saída,
+ * medir gás, encerrar PT, exportar dados). A suspensão comercial nunca pode
+ * criar uma situação insegura nem impedir a guarda de documentos.
+ */
+export const AllowWhenRestricted = () => SetMetadata(SAFETY, true);
 /** Rota sem autenticação (ex.: health check). */
 export const Public = () => SetMetadata(PUBLIC, true);
 /** Rota autenticada que não opera sobre uma empresa (ex.: /me). */

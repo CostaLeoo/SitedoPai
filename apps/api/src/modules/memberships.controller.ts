@@ -1,3 +1,4 @@
+import { enforcePlanLimit } from '../billing/limits';
 import { BadRequestException, Body, Controller, Get, NotFoundException, Param, Patch, Post } from '@nestjs/common';
 import { z } from 'zod';
 import { audit, ROLES, sql } from '@sitedopai/db';
@@ -46,6 +47,7 @@ export class MembershipsController {
   create(@Auth() auth: AuthContext, @Tenant() t: TenantContext, @Body() body: unknown) {
     const input = parse(invite, body);
     return this.db.run({ tenantId: t.tenantId, userId: auth.userId }, async (tx) => {
+      await enforcePlanLimit(tx, t.tenantId, 'users');
       const r = await sql<{ id: string }>`SELECT invite_user(${input.email}, ${input.displayName}) AS id`.execute(tx);
       const userId = r.rows[0]!.id;
       const m = await tx.insertInto('memberships').values({ tenant_id: t.tenantId, user_id: userId, status: 'INVITED' })
@@ -71,6 +73,10 @@ export class MembershipsController {
       throw new BadRequestException({ code: 'SELF_CHANGE', message: 'Você não pode alterar o seu próprio acesso.' });
     }
     const m = await this.db.run({ tenantId: t.tenantId, userId: auth.userId }, async (tx) => {
+      if (input.status !== 'SUSPENDED') {
+        const cur = await tx.selectFrom('memberships').select('status').where('id', '=', id).executeTakeFirst();
+        if (cur?.status === 'SUSPENDED') await enforcePlanLimit(tx, t.tenantId, 'users');
+      }
       const row = await tx.updateTable('memberships').set({ status: input.status }).where('id', '=', id)
         .where('tenant_id', '=', t.tenantId).returning(['id', 'status']).executeTakeFirst();
       if (row) await audit(tx, t.tenantId, { actorUserId: auth.userId, action: 'membership.status', entityType: 'membership', entityId: id, data: input });

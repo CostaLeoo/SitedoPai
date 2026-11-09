@@ -1,7 +1,7 @@
 import { BadRequestException, Body, Controller, Get, HttpCode, Param, Post } from '@nestjs/common';
 import { z } from 'zod';
 import { audit, Tx } from '@sitedopai/db';
-import { Auth, RequirePermission, Tenant } from '../common/decorators';
+import { Auth, RequirePermission, Tenant, AllowWhenRestricted } from '../common/decorators';
 import { notFound, requireTenantWide } from '../common/guards';
 import type { AuthContext, TenantContext } from '../common/request';
 import { parse, uuid } from '../common/validation';
@@ -93,6 +93,7 @@ export class RetentionController {
   }
 
   @Post('legal-holds')
+  @AllowWhenRestricted()
   @RequirePermission('retention.write')
   createHold(@Auth() auth: AuthContext, @Tenant() t: TenantContext, @Body() b: unknown) {
     requireTenantWide(t, 'retention.write');

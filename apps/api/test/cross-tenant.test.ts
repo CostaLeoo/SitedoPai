@@ -6,6 +6,7 @@
  * cobertas em api.test.ts). Uma rota nova que não esteja em nenhum dos dois
  * faz este teste falhar até ser classificada.
  */
+import { unzipSync } from 'fflate';
 import request from 'supertest';
 import { createWorld, destroyWorld, token, World } from './setup';
 
@@ -29,7 +30,12 @@ beforeAll(async () => {
 afterAll(async () => destroyWorld(w));
 
 // GET /verify/:code é pública por desenho (QR Code); seu conteúdo é testado em documents.test.ts.
-const OUTSIDE_TENANT = new Set(['GET /health', 'GET /me', 'GET /platform/tenants', 'POST /platform/tenants', 'GET /verify/:code']);
+// Rotas /platform/* só aceitam o administrador da plataforma (billing.test.ts confere
+// que o administrador de empresa recebe 403 em todas). O webhook é autenticado por HMAC.
+const OUTSIDE_TENANT = new Set(['GET /health', 'GET /me', 'GET /platform/tenants', 'POST /platform/tenants', 'GET /verify/:code',
+  'GET /platform/plans', 'POST /platform/plans', 'PATCH /platform/plans/:id', 'GET /platform/billing/overview', 'GET /platform/tenants/:id/billing',
+  'POST /platform/tenants/:id/subscription', 'POST /platform/tenants/:id/subscription/cancel', 'POST /platform/tenants/:id/status',
+  'POST /platform/billing/sync', 'POST /platform/billing/simulate', 'POST /billing/webhooks/:provider']);
 
 type Case = (http: ReturnType<typeof request>) => Promise<void>;
 const A = () => w.ids.alfa!;
@@ -44,6 +50,17 @@ const bodyHasNo = (body: unknown, values: string[]) => {
 };
 
 const CASES: Record<string, Case> = {
+  'POST /exports': async () => {
+    const res = await asA(http.post('/exports')).buffer(true).parse((r, cb) => {
+      const c: Buffer[] = [];
+      r.on('data', (d: Buffer) => c.push(d));
+      r.on('end', () => cb(null, Buffer.concat(c)));
+    }).expect(200);
+    const files = unzipSync(new Uint8Array(res.body as Buffer));
+    const all = Object.entries(files).map(([k, v]) => k + new TextDecoder().decode(v)).join('\n');
+    for (const v of [SECRET, 'Telhado Beta', 'Tanque Beta', 'Trabalhador Beta', B('aprB'), B('ptB'), B('beta'), 'APR-2026-000001-emissao']) expect(all).not.toContain(v);
+  },
+  'GET /billing': async () => { bodyHasNo((await asA(http.get('/billing')).expect(200)).body, [B('beta'), SECRET]); },
   'POST /aprs/:id/documents': async () => { await asA(http.post(`/aprs/${B('aprB')}/documents`)).expect(404); },
   'POST /work-permits/:id/documents': async () => { await asA(http.post(`/work-permits/${B('ptB')}/documents`)).expect(404); },
   'GET /documents': async () => {

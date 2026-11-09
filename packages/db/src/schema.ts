@@ -370,7 +370,79 @@ export interface LegalHoldsTable {
   created_at: Timestamp; released_by: string | null; released_at: NullableTimestamp; release_reason: string | null;
 }
 
+
+// ---------------------------------------------------------------------------
+// Fase 5: cobrança
+// ---------------------------------------------------------------------------
+export type SubscriptionStatus = 'ACTIVE' | 'PAST_DUE' | 'CANCELED';
+export type InvoiceStatus = 'OPEN' | 'PAID' | 'FAILED' | 'VOID';
+
+export interface PlansTable {
+  id: Generated<string>;
+  code: string;
+  name: string;
+  description: string | null;
+  price_cents: number;
+  currency: Generated<string>;
+  billing_interval: Generated<string>;
+  max_users: number | null;
+  max_units: number | null;
+  active: Generated<boolean>;
+  created_by: string;
+  created_at: Timestamp;
+}
+
+export interface SubscriptionsTable {
+  id: Generated<string>;
+  tenant_id: string;
+  plan_id: string;
+  plan_name: string;
+  price_cents: number;
+  max_users: number | null;
+  max_units: number | null;
+  status: Generated<SubscriptionStatus>;
+  grace_days: number;
+  provider: string;
+  provider_customer_ref: string | null;
+  provider_subscription_ref: string | null;
+  current_period_end: ColumnType<Date | null, string | null | undefined, string | null>;
+  canceled_at: NullableTimestamp;
+  cancel_reason: string | null;
+  created_by: string;
+  created_at: Timestamp;
+}
+
+export interface InvoicesTable {
+  id: Generated<string>;
+  tenant_id: string;
+  subscription_id: string;
+  amount_cents: number;
+  due_date: ColumnType<Date, string, string>;
+  status: Generated<InvoiceStatus>;
+  provider_charge_ref: string;
+  provider: string;
+  paid_at: NullableTimestamp;
+  failure_reason: string | null;
+  receipt_url: string | null;
+  created_at: Timestamp;
+}
+
+export interface BillingEventsTable {
+  id: Generated<string>;
+  tenant_id: string;
+  provider: string;
+  event_id: string;
+  type: string;
+  data: Json<Record<string, unknown>>;
+  body_sha256: string;
+  received_at: Timestamp;
+}
+
 export interface Database {
+  plans: PlansTable;
+  subscriptions: SubscriptionsTable;
+  invoices: InvoicesTable;
+  billing_events: BillingEventsTable;
   issued_documents: IssuedDocumentsTable;
   retention_rules: RetentionRulesTable;
   legal_holds: LegalHoldsTable;

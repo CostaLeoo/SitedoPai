@@ -12,6 +12,7 @@ import { APP_URL, OWNER_URL, resetDatabase } from '../../../packages/db/test/hel
 
 export const ISSUER = 'https://idp.test/realms/sitedopai';
 export const AUDIENCE = 'sitedopai-api';
+export const WEBHOOK_SECRET = 'segredo-de-teste-com-mais-de-24-caracteres';
 
 type Key = Awaited<ReturnType<typeof generateKeyPair>>['privateKey'];
 let signingKey: Key;
@@ -136,6 +137,8 @@ export async function createWorld(): Promise<World> {
     OIDC_ISSUER: ISSUER,
     OIDC_AUDIENCE: AUDIENCE,
     RATE_LIMIT_PER_MINUTE: '100000',
+    BILLING_SYNC_INTERVAL_MINUTES: '0',
+    BILLING_WEBHOOK_SECRET: WEBHOOK_SECRET,
   } as NodeJS.ProcessEnv);
   const storageDir = mkdtempSync(join(tmpdir(), 'sitedopai-test-'));
   const app = await createApp(config, createLocalJWKSet({ keys: [jwk] }), false, new LocalStorage(storageDir));
@@ -196,6 +199,7 @@ export async function createWorld(): Promise<World> {
   const photo = await sharp({ create: { width: 64, height: 48, channels: 3, background: '#4a7' } }).jpeg().toBuffer();
   mkdirSync(join(storageDir, 'x'), { recursive: true });
   writeFileSync(join(storageDir, 'x', 'display.jpg'), photo);
+  writeFileSync(join(storageDir, 'x', 'original'), photo);
   return { app, owner, ids, storageDir };
 }
 

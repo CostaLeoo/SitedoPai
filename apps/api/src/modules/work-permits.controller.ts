@@ -4,7 +4,7 @@ import { ANSWERS, audit, GasParameter, PtStatus, sql, TEAM_FUNCTIONS, Tx } from 
 import { canOnUnit, unitScope } from '../authz/permissions';
 import { staleVersion } from '../apr/apr.service';
 import { isMismatch } from '../apr/rules';
-import { Auth, RequirePermission, Tenant } from '../common/decorators';
+import { Auth, RequirePermission, Tenant, AllowWhenRestricted } from '../common/decorators';
 import { forbidden, notFound, requireUnit } from '../common/guards';
 import type { AuthContext, TenantContext } from '../common/request';
 import { canonicalJson, sha256, SignatureService } from '../common/signature';
@@ -357,6 +357,7 @@ export class WorkPermitsController {
   }
 
   @Post(':id/measurements')
+  @AllowWhenRestricted()
   @RequirePermission('pt.field')
   measure(@Auth() auth: AuthContext, @Tenant() t: TenantContext, @Param('id') id: string, @Body() body: unknown) {
     const input = parse(measurement, body);
@@ -486,6 +487,7 @@ export class WorkPermitsController {
    * Não exige login recente: parar a atividade nunca pode ter atrito.
    */
   @Post(':id/suspend')
+  @AllowWhenRestricted()
   @HttpCode(200)
   @RequirePermission('pt.read')
   suspend(@Auth() auth: AuthContext, @Tenant() t: TenantContext, @Param('id') id: string, @Body() body: unknown) {
@@ -507,6 +509,7 @@ export class WorkPermitsController {
   }
 
   @Post(':id/entries')
+  @AllowWhenRestricted()
   @RequirePermission('pt.field')
   enter(@Auth() auth: AuthContext, @Tenant() t: TenantContext, @Param('id') id: string, @Body() body: unknown) {
     const input = parse(entry, body);
@@ -525,6 +528,7 @@ export class WorkPermitsController {
 
   /** Registro de saída: aceito em QUALQUER situação da PT. */
   @Post(':id/entries/:entryId/exit')
+  @AllowWhenRestricted()
   @HttpCode(200)
   @RequirePermission('pt.read')
   exit(@Auth() auth: AuthContext, @Tenant() t: TenantContext, @Param('id') id: string, @Param('entryId') entryId: string) {
@@ -540,6 +544,7 @@ export class WorkPermitsController {
   }
 
   @Post(':id/close')
+  @AllowWhenRestricted()
   @HttpCode(200)
   @RequirePermission('pt.field')
   close(@Auth() auth: AuthContext, @Tenant() t: TenantContext, @Param('id') id: string, @Body() body: unknown) {
