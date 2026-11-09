@@ -13,6 +13,9 @@ const schema = z.object({
   /** Idade máxima do login (s) para assinar documentos. Assinar exige login recente. */
   SIGNATURE_MAX_AUTH_AGE_SECONDS: z.coerce.number().int().positive().default(600),
   CORS_ORIGINS: z.string().default(''),
+  /** 'dev' = login de teste sem Keycloak (escolhe um usuário fictício). Proibido em produção. */
+  AUTH_MODE: z.enum(['oidc', 'dev']).default('oidc'),
+  NODE_ENV: z.string().default('development'),
   STORAGE_DRIVER: z.enum(['local', 's3']).default('local'),
   STORAGE_DIR: z.string().default('./.storage'),
   S3_BUCKET: z.string().optional(),
@@ -28,6 +31,9 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
   if (!parsed.success) {
     const fields = parsed.error.issues.map((i) => i.path.join('.')).join(', ');
     throw new Error(`Configuração inválida: ${fields}`);
+  }
+  if (parsed.data.AUTH_MODE === 'dev' && parsed.data.NODE_ENV === 'production') {
+    throw new Error('AUTH_MODE=dev não pode ser usado com NODE_ENV=production');
   }
   return {
     ...parsed.data,
