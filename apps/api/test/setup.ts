@@ -1,9 +1,10 @@
+import sharp from 'sharp';
 import { INestApplication } from '@nestjs/common';
 import { createLocalJWKSet, exportJWK, generateKeyPair, JWK, SignJWT } from 'jose';
 import { createDb, Db, withContext } from '@sitedopai/db';
 import { createApp } from '../src/bootstrap';
 import { loadConfig } from '../src/config';
-import { mkdtempSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { LocalStorage } from '../src/storage/storage';
@@ -191,6 +192,10 @@ export async function createWorld(): Promise<World> {
     });
   }
   await seedBetaApr(owner, ids);
+  // Cópia de exibição da foto da Beta (usada no PDF).
+  const photo = await sharp({ create: { width: 64, height: 48, channels: 3, background: '#4a7' } }).jpeg().toBuffer();
+  mkdirSync(join(storageDir, 'x'), { recursive: true });
+  writeFileSync(join(storageDir, 'x', 'display.jpg'), photo);
   return { app, owner, ids, storageDir };
 }
 

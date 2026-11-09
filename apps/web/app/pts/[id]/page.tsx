@@ -2,6 +2,7 @@
 import { useParams } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
 import { FUNCTION_LABEL, fmt, MEANING_LABEL, PT_STATUS } from '@/components/pt/labels';
+import { DocumentsPanel } from '@/components/documents-panel';
 import { ValidityBanner } from '@/components/pt/validity';
 import { QuestionCard } from '@/components/question-card';
 import { AppShell, useSession } from '@/components/session';
@@ -105,6 +106,7 @@ function PtPage() {
         {tab === 'Liberação' && <FlowTab pt={pt} check={check} onDone={load} goTo={setTab} />}
         {tab === 'Assinaturas' && <SignaturesTab pt={pt} />}
       </div>
+      <DocumentsPanel type="work_permit" id={pt.id} number={pt.number} statusLabel={(s) => PT_STATUS[s as keyof typeof PT_STATUS] ?? s} />
     </>
   );
 }

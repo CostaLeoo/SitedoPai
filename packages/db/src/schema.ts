@@ -353,7 +353,27 @@ export interface SignaturesTable {
   signer_context: Json<Record<string, unknown>>; evidence: Json<Record<string, unknown>>; signed_at: Timestamp;
 }
 
+export type RetentionSource = 'LEGAL' | 'CONTRACT' | 'INTERNAL';
+export type DocType = 'apr' | 'work_permit';
+export interface IssuedDocumentsTable {
+  id: Generated<string>; tenant_id: string; document_type: DocType; document_id: string; document_number: string;
+  document_revision: Generated<number>; sequence: number; status_at_issue: string; sha256: string; size_bytes: number;
+  storage_key: string; verification_code: string; issued_by: string; issued_at: Timestamp;
+}
+export interface RetentionRulesTable {
+  id: Generated<string>; tenant_id: string; document_type: DocType; pt_type_name: string | null; min_years: number;
+  source: RetentionSource; basis: string; active: Generated<boolean>; created_by: string; created_at: Timestamp;
+  deactivated_by: string | null; deactivated_at: NullableTimestamp;
+}
+export interface LegalHoldsTable {
+  id: Generated<string>; tenant_id: string; document_type: DocType; document_id: string; reason: string; created_by: string;
+  created_at: Timestamp; released_by: string | null; released_at: NullableTimestamp; release_reason: string | null;
+}
+
 export interface Database {
+  issued_documents: IssuedDocumentsTable;
+  retention_rules: RetentionRulesTable;
+  legal_holds: LegalHoldsTable;
   workers: WorkersTable;
   qualification_types: QualificationTypesTable;
   worker_qualifications: WorkerQualificationsTable;

@@ -28,6 +28,8 @@ jobs:
         with:
           node-version-file: .nvmrc
           cache: pnpm
+      - name: Ferramentas de PDF para os testes
+        run: sudo apt-get update && sudo apt-get install -y poppler-utils qpdf
       - run: pnpm install --frozen-lockfile
       - run: bash scripts/setup-db.sh sitedopai_test
       - run: pnpm typecheck

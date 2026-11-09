@@ -6,8 +6,9 @@ e Permissão de Trabalho (PT), destinada a empresas brasileiras.
 > Princípio fundamental: a segurança dos trabalhadores tem prioridade sobre a
 > velocidade de preenchimento e liberação.
 
-**Situação:** Fase 1 (Fundação), Fase 2 (APR) e Fase 3 (Permissão de
-Trabalho), com backend e telas no celular, implementadas e testadas localmente. Não está pronto para produção (ver
+**Situação:** Fase 1 (Fundação), Fase 2 (APR), Fase 3 (Permissão de
+Trabalho) e Fase 4 (PDF com QR Code, arquivamento e guarda), com backend e
+telas no celular, implementadas e testadas localmente. Não está pronto para produção (ver
 *Pendências*).
 
 ## Documentos
@@ -31,29 +32,31 @@ docs              Especificação, modelo de dados, decisões (ADRs)
 
 ## Como rodar localmente
 
-Requisitos: Node 22, pnpm 10, Docker (ou um PostgreSQL 16 local).
+Requisitos: Node 22, pnpm 10 e Docker (ou um PostgreSQL 16 instalado).
 
 ```bash
 pnpm install
-cp .env.example .env
-docker compose up -d                                   # Postgres, Redis, MinIO, Keycloak
-PGHOST=localhost PGUSER=postgres PGPASSWORD=postgres pnpm db:setup   # banco + papéis
-pnpm db:migrate                                        # aplica migrations/*.sql
-pnpm db:seed                                           # dados fictícios de demonstração
-pnpm dev                                               # API em http://localhost:3001
+cp .env.example .env                    # no Windows: copy .env.example .env
 cp apps/web/.env.example apps/web/.env.local
-pnpm --filter @sitedopai/web dev                       # site em http://localhost:3000
+docker compose up -d postgres           # só o banco; o Keycloak não é necessário no modo de teste
+PGHOST=localhost PGUSER=postgres PGPASSWORD=postgres pnpm db:setup
+pnpm db:migrate
+pnpm db:seed                            # dados fictícios
+pnpm dev                                # API em http://localhost:3001
+# em outro terminal:
+pnpm --filter @sitedopai/web dev        # site em http://localhost:3000
 ```
 
-Usuários de demonstração no Keycloak (http://localhost:8080, realm `sitedopai`):
-`admin@`, `sst@`, `supervisor@`, `executante@` e `plataforma@sitedopai.local`,
-senha inicial `Troque-esta-senha-1` (o Keycloak pede a troca e, para perfis
-privilegiados, o cadastro do segundo fator).
+### Login de teste (sem Keycloak)
 
-> O `docker-compose.yml` e o realm do Keycloak não foram executados no ambiente
-> em que esta fase foi construída (sem Docker). Banco, migrações, seed e API
-> foram testados com PostgreSQL 16 local.
+Com `AUTH_MODE=dev` (API) e `NEXT_PUBLIC_AUTH_MODE=dev` (site), já definidos nos
+`.env.example`, a tela de entrada mostra a lista de usuários fictícios do seed:
+basta escolher um. Não há senha nem verificação em duas etapas; a API emite o
+token com uma chave gerada a cada inicialização.
 
+- A API **se recusa a iniciar** com `AUTH_MODE=dev` e `NODE_ENV=production` (teste automatizado).
+- Só aceita e-mails `@sitedopai.local`.
+- Para usar o Keycloak, troque para `AUTH_MODE=oidc`, remova `NEXT_PUBLIC_AUTH_MODE` e rode `docker compose up -d`.
 ## Testes
 
 ```bash
@@ -69,7 +72,9 @@ pnpm test
 | `apps/api/test/apr.test.ts` | 38 | Matriz, ciclo do modelo (revisão por outra pessoa), preenchimento, "Sim" que não é seguro, pergunta crítica com nova avaliação, fotos (arquivo disfarçado, imagem corrompida, HEIC, EXIF/GPS removido, original íntegro, limite com envios simultâneos), análise de riscos, envio, aprovação, devolução, cancelamento, revisão, histórico |
 | `packages/db/test/pt-triggers.test.ts` | 6 | Travas da PT no banco: máquina de estados, dados congelados após envio, entradas só em execução e saída sempre, imutabilidade de medições, assinaturas e qualificações, hash do conteúdo assinado |
 | `apps/api/test/pt.test.ts` | 21 | Qualificações e trabalhadores, tipo de PT, APR aprovada obrigatória, validade máxima, funções e qualificações da equipe, análise, gases (ausente, fora do limite), liberação (papel, designação, MFA, login recente, segregação), ciência individual, entradas, suspensão automática por gás, retomada, encerramento, verificação de assinaturas, expiração |
-| `apps/api/test/cross-tenant.test.ts` | 79 | Lê a lista real de rotas da API (81) e tenta ler, alterar e criar dados da empresa B como administrador e como SST da A. Rota nova sem caso de teste faz a suíte falhar |
+| `apps/api/test/documents.test.ts` | 14 | PDF da APR e da PT (texto, CNPJ, situação na emissão, aviso de PT sem validade, PDF/A declarado, estrutura válida), hash do arquivo, emissões imutáveis, arquivo adulterado não é entregue, auditoria de download, verificação pública sem dados pessoais, regras de guarda, retenção especial e cálculo de elegibilidade |
+| `apps/api/test/dev-login.test.ts` | 2 | Login de teste desligado por padrão e recusado em produção |
+| `apps/api/test/cross-tenant.test.ts` | 90 | Lê a lista real de rotas da API (93) e tenta ler, alterar e criar dados da empresa B como administrador e como SST da A. Rota nova sem caso de teste faz a suíte falhar |
 
 ### Testes de ponta a ponta (site)
 
@@ -162,6 +167,26 @@ profissional que validou.
 | `POST …/close`, `POST …/cancel`, `POST …/reject` | Encerramento assinado, cancelamento, rejeição |
 | `GET …/validity`, `GET …/signatures`, `GET …/history` | Vale agora?, assinaturas verificadas, histórico |
 
+## Documentos, QR Code e guarda (Fase 4)
+
+| Rota | O que faz |
+| --- | --- |
+| `POST /aprs/:id/documents`, `POST /work-permits/:id/documents` | Emite o PDF (qualquer situação; a situação na emissão vai em destaque e, se a PT não vale como autorização, um aviso em vermelho) |
+| `GET /documents?documentType&documentId`, `GET /documents/:id/file` | Emissões e download (confere o hash antes de entregar; cada download vai para a auditoria) |
+| `GET /verify/:code` | **Pública**, com limite de 30/min: tipo, número, empresa, datas, hash e situação atual. Sem nomes, local, atividade ou conteúdo |
+| `GET/POST /retention-rules`, `POST …/:id/deactivate` | Regras de guarda (prazo, origem LEGAL/CONTRATO/INTERNA e fundamento). Regra legal não pode ser desativada |
+| `GET/POST /legal-holds`, `POST …/:id/release` | Retenção especial (ex.: processo), liberada uma vez com justificativa |
+| `GET /retention/report` | Relatório: guarda indefinida (sem regra), em guarda até a data X, em retenção especial ou elegível para revisão. **Nada é apagado** |
+
+- Cada emissão é um arquivo novo, gravado uma única vez (o armazenamento
+  recusa sobrescrever) e um registro imutável no banco com hash SHA-256 e um
+  código de verificação aleatório de 120 bits.
+- O QR Code aponta para `PUBLIC_VERIFY_BASE_URL/v/<código>`. Uma PT suspensa,
+  expirada, encerrada ou cancelada aparece como **NÃO VALE COMO AUTORIZAÇÃO**.
+- Nenhum prazo de guarda vem pré-configurado: sem regra, a guarda é indefinida.
+- PDF gerado com pdfkit (ver ADR 0002). PDF/A-2b é declarado, mas a
+  conformidade precisa ser validada com veraPDF antes da produção.
+
 ## Pendências
 
 - Decisão 7: indicar profissional de SST e assessoria jurídica.
@@ -186,3 +211,7 @@ profissional que validou.
 - Nenhum modelo vem como "aprovado": o seed traz matriz e modelo de EXEMPLO em
   rascunho, que o SST da empresa precisa revisar e publicar.
 - Matriz de conformidade ainda preliminar (textos oficiais a conferir).
+- Fase 4: validar PDF/A com veraPDF; em produção, ativar Object Lock (modo
+  compliance) no bucket para os PDFs; prazos de guarda dependem do jurídico.
+- Fase 4: a data final usada na guarda é a decisão da APR e o encerramento da
+  PT (ou o fim da validade, se expirou). Confirmar com o jurídico.

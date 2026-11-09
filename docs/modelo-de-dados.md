@@ -138,3 +138,19 @@ SHA-256 do conteúdo assinado, o conteúdo em si, a data e hora do servidor e as
 evidências (método, `amr`, `auth_time`, sessão, IP, navegador). A verificação
 recalcula o hash e confirma que a PT não mudou desde a última liberação.
 ICP-Brasil (PAdES) entra quando o parecer jurídico definir onde é exigida.
+
+
+## Fase 4 — documentos emitidos e guarda
+
+- `issued_documents`: cada emissão de PDF (tipo, documento, número, revisão,
+  sequência, situação na emissão, SHA-256, tamanho, chave no armazenamento,
+  código de verificação de 24 caracteres base32, quem e quando). Imutável
+  (sem UPDATE, DELETE nem TRUNCATE).
+- `retention_rules`: prazo mínimo em anos (1–100), origem (`LEGAL`,
+  `CONTRACT`, `INTERNAL`), fundamento e, opcionalmente, o tipo de PT. Não pode
+  ser apagada; só desativada uma vez, e nunca se for `LEGAL`.
+- `legal_holds`: retenção especial de um documento, com motivo; liberada uma
+  única vez, com justificativa. Não pode ser apagada.
+- `verify_document(code)` (SECURITY DEFINER): única leitura sem empresa no
+  contexto. Devolve só tipo, número, revisão, nome da empresa, data, hash e
+  situações (calcula `EXPIRED` para PT vencida).

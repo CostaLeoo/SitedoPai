@@ -2,7 +2,7 @@
 import { useRouter } from 'next/navigation';
 import { createContext, ReactNode, useContext, useEffect, useState } from 'react';
 import { api, ApiError } from '@/lib/api';
-import { auth, currentUser } from '@/lib/auth';
+import { currentUser, logout } from '@/lib/auth';
 import { clearTenant, getTenant, setTenant } from '@/lib/tenant';
 import type { Me } from '@/lib/types';
 import { Banner, Button } from './ui';
@@ -76,7 +76,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               className="min-h-[44px] rounded px-2 underline underline-offset-4"
               onClick={async () => {
                 clearTenant();
-                await auth().signoutRedirect().catch(() => auth().removeUser().then(() => router.replace('/entrar')));
+                await logout();
               }}
             >
               Sair

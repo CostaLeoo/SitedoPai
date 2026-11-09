@@ -80,3 +80,17 @@ export async function photoUrl(aprId: string, photoId: string): Promise<string> 
   const res = await request(`/aprs/${aprId}/photos/${photoId}`);
   return URL.createObjectURL(await res.blob());
 }
+
+/** Baixa um PDF emitido (com o token) e dispara o download no navegador. */
+export async function downloadDocument(id: string, fallbackName: string) {
+  const res = await request(`/documents/${id}/file`);
+  const name = /filename="([^"]+)"/.exec(res.headers.get('Content-Disposition') ?? '')?.[1] ?? fallbackName;
+  const url = URL.createObjectURL(await res.blob());
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = name;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 10_000);
+}
