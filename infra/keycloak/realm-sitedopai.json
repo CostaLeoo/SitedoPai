@@ -1,0 +1,59 @@
+{
+  "realm": "sitedopai",
+  "enabled": true,
+  "displayName": "SitedoPai (desenvolvimento)",
+  "loginWithEmailAllowed": true,
+  "duplicateEmailsAllowed": false,
+  "bruteForceProtected": true,
+  "passwordPolicy": "length(12) and notUsername and notEmail",
+  "otpPolicyType": "totp",
+  "otpPolicyAlgorithm": "HmacSHA1",
+  "otpPolicyDigits": 6,
+  "otpPolicyPeriod": 30,
+  "accessTokenLifespan": 300,
+  "ssoSessionIdleTimeout": 1800,
+  "clients": [
+    {
+      "clientId": "sitedopai-api",
+      "enabled": true,
+      "bearerOnly": true,
+      "publicClient": false
+    },
+    {
+      "clientId": "sitedopai-web",
+      "enabled": true,
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": false,
+      "redirectUris": ["http://localhost:3000/*"],
+      "webOrigins": ["http://localhost:3000"],
+      "attributes": { "pkce.code.challenge.method": "S256" },
+      "protocolMappers": [
+        {
+          "name": "audience-api",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "config": { "included.client.audience": "sitedopai-api", "access.token.claim": "true", "id.token.claim": "false" }
+        },
+        {
+          "name": "amr",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-amr-mapper",
+          "config": { "access.token.claim": "true", "id.token.claim": "true" }
+        }
+      ]
+    }
+  ],
+  "users": [
+    { "username": "admin@sitedopai.local", "email": "admin@sitedopai.local", "emailVerified": true, "enabled": true, "firstName": "Ana", "lastName": "(fictícia)",
+      "credentials": [{ "type": "password", "value": "Troque-esta-senha-1", "temporary": true }], "requiredActions": ["CONFIGURE_TOTP"] },
+    { "username": "sst@sitedopai.local", "email": "sst@sitedopai.local", "emailVerified": true, "enabled": true, "firstName": "Sérgio", "lastName": "(fictício)",
+      "credentials": [{ "type": "password", "value": "Troque-esta-senha-1", "temporary": true }], "requiredActions": ["CONFIGURE_TOTP"] },
+    { "username": "supervisor@sitedopai.local", "email": "supervisor@sitedopai.local", "emailVerified": true, "enabled": true, "firstName": "Sueli", "lastName": "(fictícia)",
+      "credentials": [{ "type": "password", "value": "Troque-esta-senha-1", "temporary": true }], "requiredActions": ["CONFIGURE_TOTP"] },
+    { "username": "executante@sitedopai.local", "email": "executante@sitedopai.local", "emailVerified": true, "enabled": true, "firstName": "Edson", "lastName": "(fictício)",
+      "credentials": [{ "type": "password", "value": "Troque-esta-senha-1", "temporary": true }] },
+    { "username": "plataforma@sitedopai.local", "email": "plataforma@sitedopai.local", "emailVerified": true, "enabled": true, "firstName": "Paula", "lastName": "(fictícia)",
+      "credentials": [{ "type": "password", "value": "Troque-esta-senha-1", "temporary": true }], "requiredActions": ["CONFIGURE_TOTP"] }
+  ]
+}
