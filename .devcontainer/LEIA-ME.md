@@ -8,7 +8,7 @@ modelo e tipo de PT sem validação profissional). Não use em atividade real.
 2. O site abre sozinho. Se não abrir: aba **PORTS** (embaixo) → linha **3000** → ícone do globo.
 3. Escolha um usuário fictício na tela de entrada.
 
-## Se algo travar
+## Se o site não responder
 No terminal, rode:
 ```
 bash .devcontainer/start.sh

@@ -9,6 +9,11 @@ pnpm install --frozen-lockfile
 
 echo "==> Configuração de demonstração…"
 [ -f .env ] || cp .env.example .env
+# Endereço público do site neste Codespace (usado no QR Code dos PDFs).
+if [ -n "${CODESPACE_NAME:-}" ]; then
+  grep -v '^PUBLIC_VERIFY_BASE_URL=' .env > .env.tmp && mv .env.tmp .env
+  echo "PUBLIC_VERIFY_BASE_URL=https://${CODESPACE_NAME}-3000.${GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN:-app.github.dev}" >> .env
+fi
 cat > apps/web/.env.local <<ENV
 # Codespaces: o navegador fala só com o site, que repassa /api para a API.
 NEXT_PUBLIC_API_URL=/api
@@ -28,4 +33,4 @@ pnpm demo:setup
 
 echo "==> Compilando API e site (1 a 3 minutos)…"
 pnpm build
-echo "==> Pronto. O site abre sozinho na porta 3000."
+echo "==> Pronto. Em alguns segundos o site fica disponível na porta 3000 (aba PORTS)."

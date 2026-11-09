@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# Roda sempre que o Codespace liga: sobe a API e o site em segundo plano.
+# Uso manual, só se o site não estiver no ar: sobe a API e o site em segundo plano.
+# Normalmente o serviço "servers" (run-servers.sh) já faz isso sozinho.
 set -uo pipefail
 cd "$(dirname "$0")/.."
 [ -f apps/api/dist/main.js ] || { echo "Ainda compilando (setup)…"; exit 0; }

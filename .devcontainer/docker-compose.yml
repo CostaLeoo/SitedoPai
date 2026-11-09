@@ -6,6 +6,14 @@ services:
     command: sleep infinity
     # Compartilha a rede com o banco: a aplicação acessa o Postgres em localhost.
     network_mode: service:db
+  # API e site rodam num serviço próprio, gerenciado pelo Docker: continuam no ar
+  # mesmo depois que a preparação termina, e voltam sozinhos quando o Codespace religa.
+  servers:
+    image: mcr.microsoft.com/devcontainers/javascript-node:1-22-bookworm
+    volumes: [../..:/workspaces:cached]
+    network_mode: service:db
+    restart: unless-stopped
+    command: ["bash", "-c", "cd /workspaces/* && exec bash .devcontainer/run-servers.sh"]
   db:
     image: postgres:16
     restart: unless-stopped
