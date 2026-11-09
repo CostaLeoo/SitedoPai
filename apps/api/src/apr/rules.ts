@@ -107,43 +107,7 @@ export function checkApr(a: AprState): CheckResult {
   if (blank(a.responsibleName)) blocking.push({ code: 'RESPONSIBLE_REQUIRED', message: 'Informe o responsável.' });
   if (a.team.length === 0) blocking.push({ code: 'TEAM_REQUIRED', message: 'Informe a equipe executante.' });
 
-  const answers = new Map(a.answers.map((x) => [x.questionId, x]));
-  let answered = 0;
-  for (const q of [...a.questions].sort((x, y) => x.position - y.position)) {
-    const ans = answers.get(q.id);
-    const label = `Pergunta ${q.position}`;
-    if (!ans) {
-      if (q.required) blocking.push({ code: 'ANSWER_REQUIRED', message: `${label}: responda Sim, Não ou N/A.`, questionId: q.id });
-      continue;
-    }
-    answered++;
-    if (ans.answer === 'NA' && !q.allowNa) {
-      blocking.push({ code: 'NA_NOT_ALLOWED', message: `${label}: N/A não é permitido nesta pergunta.`, questionId: q.id });
-      continue;
-    }
-    if (needsJustification(q, ans.answer) && blank(ans.justification)) {
-      blocking.push({ code: 'JUSTIFICATION_REQUIRED', message: `${label}: escreva a justificativa.`, questionId: q.id });
-    }
-    const photos = a.photoCounts[q.id] ?? 0;
-    if (photos < q.photosRequired) {
-      blocking.push({ code: 'PHOTOS_REQUIRED', message: `${label}: adicione ${q.photosRequired - photos} foto(s).`, questionId: q.id });
-    }
-    if (!isMismatch(q, ans.answer)) continue;
-
-    if (q.mismatchEffect === 'ALERT') {
-      warnings.push({ code: 'MISMATCH_ALERT', message: `${label}: resposta diferente da esperada. Confira as medidas de controle.`, questionId: q.id });
-    } else if (blank(ans.correctiveAction)) {
-      blocking.push({ code: 'CORRECTIVE_ACTION_REQUIRED', message: `${label}: registre a ação corretiva.`, questionId: q.id });
-    } else if (q.mismatchEffect === 'BLOCK') {
-      if (ans.reassessedAnswer == null || ans.reassessedBy == null) {
-        blocking.push({ code: 'REASSESSMENT_REQUIRED', message: `${label}: depois da ação corretiva, outra pessoa precisa avaliar de novo.`, questionId: q.id });
-      } else if (ans.reassessedBy === ans.answeredBy) {
-        blocking.push({ code: 'REASSESSMENT_SAME_PERSON', message: `${label}: a nova avaliação precisa ser feita por outra pessoa.`, questionId: q.id });
-      } else if (isMismatch(q, ans.reassessedAnswer)) {
-        blocking.push({ code: 'REASSESSMENT_FAILED', message: `${label}: a nova avaliação ainda não confirma a condição segura. A atividade não pode seguir.`, questionId: q.id });
-      }
-    }
-  }
+  const answered = checkAnswers(a.questions, a.answers, a.photoCounts, blocking, warnings);
 
   if (a.steps.length === 0) blocking.push({ code: 'STEPS_REQUIRED', message: 'Descreva ao menos uma etapa da atividade.' });
   for (const step of a.steps) {
@@ -171,4 +135,50 @@ export function checkApr(a: AprState): CheckResult {
   }
 
   return { ready: blocking.length === 0, blocking, warnings, progress: { answered, total: a.questions.length } };
+}
+
+/** Regras do checklist (Sim/Não/N/A), comuns à APR e à PT. Devolve quantas foram respondidas. */
+export function checkAnswers(
+  questions: QuestionRule[], answersList: AnswerState[], photoCounts: Record<string, number>,
+  blocking: Issue[], warnings: Issue[],
+): number {
+  const answers = new Map(answersList.map((x) => [x.questionId, x]));
+  let answered = 0;
+  for (const q of [...questions].sort((x, y) => x.position - y.position)) {
+    const ans = answers.get(q.id);
+    const label = `Pergunta ${q.position}`;
+    if (!ans) {
+      if (q.required) blocking.push({ code: 'ANSWER_REQUIRED', message: `${label}: responda Sim, Não ou N/A.`, questionId: q.id });
+      continue;
+    }
+    answered++;
+    if (ans.answer === 'NA' && !q.allowNa) {
+      blocking.push({ code: 'NA_NOT_ALLOWED', message: `${label}: N/A não é permitido nesta pergunta.`, questionId: q.id });
+      continue;
+    }
+    if (needsJustification(q, ans.answer) && blank(ans.justification)) {
+      blocking.push({ code: 'JUSTIFICATION_REQUIRED', message: `${label}: escreva a justificativa.`, questionId: q.id });
+    }
+    const photos = photoCounts[q.id] ?? 0;
+    if (photos < q.photosRequired) {
+      blocking.push({ code: 'PHOTOS_REQUIRED', message: `${label}: adicione ${q.photosRequired - photos} foto(s).`, questionId: q.id });
+    }
+    if (!isMismatch(q, ans.answer)) continue;
+
+    if (q.mismatchEffect === 'ALERT') {
+      warnings.push({ code: 'MISMATCH_ALERT', message: `${label}: resposta diferente da esperada. Confira as medidas de controle.`, questionId: q.id });
+    } else if (blank(ans.correctiveAction)) {
+      blocking.push({ code: 'CORRECTIVE_ACTION_REQUIRED', message: `${label}: registre a ação corretiva.`, questionId: q.id });
+    } else if (q.mismatchEffect === 'BLOCK') {
+      if (ans.reassessedAnswer == null || ans.reassessedBy == null) {
+        blocking.push({ code: 'REASSESSMENT_REQUIRED', message: `${label}: depois da ação corretiva, outra pessoa precisa avaliar de novo.`, questionId: q.id });
+      } else if (ans.reassessedBy === ans.answeredBy) {
+        blocking.push({ code: 'REASSESSMENT_SAME_PERSON', message: `${label}: a nova avaliação precisa ser feita por outra pessoa.`, questionId: q.id });
+      } else if (isMismatch(q, ans.reassessedAnswer)) {
+        blocking.push({ code: 'REASSESSMENT_FAILED', message: `${label}: a nova avaliação ainda não confirma a condição segura. A atividade não pode seguir.`, questionId: q.id });
+      }
+    }
+  }
+
+  return answered;
 }

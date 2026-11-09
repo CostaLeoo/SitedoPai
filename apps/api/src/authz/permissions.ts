@@ -20,6 +20,15 @@ export const PERMISSIONS = {
   'apr.read': ['COMPANY_ADMIN', 'SST', 'SUPERVISOR', 'EXECUTOR', 'AUDITOR'],
   'apr.write': ['SST', 'SUPERVISOR', 'EXECUTOR'],
   'apr.approve': ['SST', 'SUPERVISOR'],
+  'people.read': ['COMPANY_ADMIN', 'SST', 'SUPERVISOR', 'AUDITOR'],
+  'people.write': ['COMPANY_ADMIN', 'SST'],
+  'pt_type.write': ['SST'],
+  'pt_type.review': ['SST'],
+  'pt.read': ['COMPANY_ADMIN', 'SST', 'SUPERVISOR', 'EXECUTOR', 'AUDITOR'],
+  'pt.write': ['SST', 'SUPERVISOR', 'EXECUTOR'],
+  'pt.review': ['SST'],
+  'pt.release': ['SST', 'SUPERVISOR'],
+  'pt.field': ['SST', 'SUPERVISOR', 'EXECUTOR'],
   'apr.photo_original': ['COMPANY_ADMIN', 'SST', 'SUPERVISOR', 'AUDITOR'],
 } as const satisfies Record<string, readonly Role[]>;
 

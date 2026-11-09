@@ -6,6 +6,12 @@ export interface AuthContext {
   subject: string;
   /** Verdadeiro se o provedor informou um segundo fator no claim "amr". */
   mfa: boolean;
+  amr: string[];
+  authTime: number | null;
+  sessionId: string | null;
+  tokenId: string | null;
+  ip: string;
+  userAgent: string;
 }
 
 export interface Assignment {

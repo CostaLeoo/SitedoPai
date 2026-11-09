@@ -10,6 +10,8 @@ const schema = z.object({
   PORT: z.coerce.number().int().positive().default(3001),
   RATE_LIMIT_PER_MINUTE: z.coerce.number().int().positive().default(300),
   /** Origens do frontend autorizadas (separadas por vírgula). Vazio = nenhuma. */
+  /** Idade máxima do login (s) para assinar documentos. Assinar exige login recente. */
+  SIGNATURE_MAX_AUTH_AGE_SECONDS: z.coerce.number().int().positive().default(600),
   CORS_ORIGINS: z.string().default(''),
   STORAGE_DRIVER: z.enum(['local', 's3']).default('local'),
   STORAGE_DIR: z.string().default('./.storage'),
