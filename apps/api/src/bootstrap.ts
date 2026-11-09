@@ -12,7 +12,16 @@ export async function createApp(config: AppConfig, keys?: JWTVerifyGetKey, logge
   const app = await NestFactory.create<NestExpressApplication>(AppModule.forRoot(config, keys, storage), {
     logger: logger ? ['error', 'warn', 'log'] : false,
   });
-  app.use(helmet());
+  app.use(helmet({ crossOriginResourcePolicy: { policy: config.corsOrigins.length ? 'cross-origin' : 'same-origin' } }));
+  if (config.corsOrigins.length) {
+    app.enableCors({
+      origin: config.corsOrigins,
+      methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
+      allowedHeaders: ['Authorization', 'Content-Type', 'X-Tenant-Id'],
+      exposedHeaders: ['X-Content-SHA256'],
+      maxAge: 600,
+    });
+  }
   app.useBodyParser('json', { limit: '256kb' });
   app.disable('x-powered-by');
   app.enableShutdownHooks();

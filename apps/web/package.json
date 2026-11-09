@@ -1,0 +1,32 @@
+{
+  "name": "@sitedopai/web",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev -p 3000",
+    "build": "next build",
+    "start": "next start -p 3000",
+    "typecheck": "tsc --noEmit",
+    "test:e2e": "playwright test"
+  },
+  "dependencies": {
+    "lucide-react": "1.70.0",
+    "next": "15.5.29",
+    "oidc-client-ts": "3.5.0",
+    "react": "19.1.10",
+    "react-dom": "19.1.10"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "4.14.0",
+    "@playwright/test": "1.65.0",
+    "@sitedopai/db": "workspace:*",
+    "@tailwindcss/postcss": "4.3.5",
+    "@types/node": "22.20.5",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "jose": "5.10.0",
+    "sharp": "0.34.5",
+    "tailwindcss": "4.3.5",
+    "typescript": "5.9.3"
+  }
+}

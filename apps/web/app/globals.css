@@ -1,0 +1,32 @@
+@import "tailwindcss";
+
+/*
+ * Base visual para uso em campo: texto grande, alto contraste (WCAG 2.2 AA),
+ * áreas de toque de no mínimo 48 px, foco sempre visível.
+ * Cores de estado nunca são o único sinal: há sempre texto junto.
+ */
+@theme {
+  --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --color-ink: #111827;
+  --color-muted: #4b5563;
+  --color-line: #d1d5db;
+  --color-surface: #ffffff;
+  --color-canvas: #f3f4f6;
+  --color-brand: #1d4ed8;
+  --color-brand-ink: #1e3a8a;
+  --color-ok: #166534;
+  --color-ok-bg: #dcfce7;
+  --color-warn: #92400e;
+  --color-warn-bg: #fef3c7;
+  --color-danger: #991b1b;
+  --color-danger-bg: #fee2e2;
+}
+
+html { -webkit-text-size-adjust: 100%; }
+body { background: var(--color-canvas); color: var(--color-ink); font-size: 1.0625rem; line-height: 1.5; }
+
+:focus-visible { outline: 3px solid var(--color-brand); outline-offset: 2px; }
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; animation: none !important; }
+}

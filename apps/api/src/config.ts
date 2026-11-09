@@ -9,6 +9,8 @@ const schema = z.object({
   MFA_AMR_VALUES: z.string().default('otp,mfa,hwk,swk'),
   PORT: z.coerce.number().int().positive().default(3001),
   RATE_LIMIT_PER_MINUTE: z.coerce.number().int().positive().default(300),
+  /** Origens do frontend autorizadas (separadas por vírgula). Vazio = nenhuma. */
+  CORS_ORIGINS: z.string().default(''),
   STORAGE_DRIVER: z.enum(['local', 's3']).default('local'),
   STORAGE_DIR: z.string().default('./.storage'),
   S3_BUCKET: z.string().optional(),
@@ -16,7 +18,7 @@ const schema = z.object({
   S3_ENDPOINT: z.string().url().optional(),
 });
 
-export type AppConfig = z.infer<typeof schema> & { mfaAmrValues: string[] };
+export type AppConfig = z.infer<typeof schema> & { mfaAmrValues: string[]; corsOrigins: string[] };
 export const APP_CONFIG = Symbol('APP_CONFIG');
 
 export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
@@ -27,6 +29,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
   }
   return {
     ...parsed.data,
+    corsOrigins: parsed.data.CORS_ORIGINS.split(',').map((s) => s.trim()).filter(Boolean),
     mfaAmrValues: parsed.data.MFA_AMR_VALUES.split(',').map((s) => s.trim()).filter(Boolean),
   };
 }
