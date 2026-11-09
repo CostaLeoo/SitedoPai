@@ -7,3 +7,8 @@ onlyBuiltDependencies:
   - prisma
   - argon2
   - sharp
+# Correções de segurança em dependências transitivas (pnpm audit, Fase 6).
+overrides:
+  postcss: ">=8.5.32"
+  "glob@>=9.0.0 <14.0.2": ">=14.0.2"
+  "minimatch@>=7.0.0 <11.0.1": ">=11.0.1"

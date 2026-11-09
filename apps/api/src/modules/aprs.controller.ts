@@ -64,7 +64,13 @@ const analysis = z.strictObject({
 });
 const decision = z.strictObject({ note: z.string().trim().max(2000).optional() });
 const requiredNote = z.strictObject({ note: z.string().trim().min(1, 'Explique o motivo').max(2000) });
-const listQuery = z.object({ status: z.enum(['DRAFT', 'IN_REVIEW', 'RETURNED', 'APPROVED', 'CANCELLED']).optional() });
+const listQuery = z.object({
+  status: z.enum(['DRAFT', 'IN_REVIEW', 'RETURNED', 'APPROVED', 'CANCELLED']).optional(),
+  /** Paginação por cursor: data e id do último item da página anterior. */
+  before: z.string().datetime({ offset: true }).optional(),
+  beforeId: z.string().uuid().optional(),
+});
+export const PAGE_SIZE = 100;
 
 const EDITABLE = new Set(['DRAFT', 'RETURNED']);
 const notEditable = () => new BadRequestException({ code: 'APR_NOT_EDITABLE', message: 'A APR não está em edição.' });
@@ -96,12 +102,13 @@ export class AprsController {
   @Get()
   @RequirePermission('apr.read')
   list(@Auth() auth: AuthContext, @Tenant() t: TenantContext, @Query() q: unknown) {
-    const { status } = parse(listQuery, q);
+    const { status, before, beforeId } = parse(listQuery, q);
     const scope = unitScope(t.assignments, 'apr.read');
     return this.run(auth, t, (tx) => {
       let query = tx.selectFrom('aprs').select(['id', 'number', 'revision', 'status', 'unit_id', 'activity_date', 'location', 'service_description', 'updated_at'])
-        .orderBy('updated_at', 'desc').limit(200);
+        .orderBy('updated_at', 'desc').orderBy('id', 'desc').limit(PAGE_SIZE);
       if (status) query = query.where('status', '=', status);
+      if (before && beforeId) query = query.where(sql<boolean>`(updated_at, id) < (${before}::timestamptz, ${beforeId}::uuid)`);
       if (!scope.all) query = scope.unitIds.length ? query.where('unit_id', 'in', scope.unitIds) : query.where(sql<boolean>`false`);
       return query.execute();
     });

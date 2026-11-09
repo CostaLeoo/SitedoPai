@@ -7,7 +7,10 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
     ports: ["5432:5432"]
-    volumes: [pgdata:/var/lib/postgresql/data]
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      # Na primeira inicialização, cria o banco e os papéis (owner, app, backup).
+      - ./scripts/setup-db.sh:/docker-entrypoint-initdb.d/10-setup-db.sh:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 5s

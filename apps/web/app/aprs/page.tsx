@@ -1,17 +1,12 @@
 'use client';
-import { useEffect, useState } from 'react';
 import { AppShell } from '@/components/session';
-import { Banner, Card, StatusBadge } from '@/components/ui';
-import { api, ApiError } from '@/lib/api';
+import { Banner, Button, Card, StatusBadge } from '@/components/ui';
+import { usePaged } from '@/lib/paged';
 
-interface Row { id: string; number: string; revision: number; status: string; activity_date: string; location: string; service_description: string }
+interface Row { id: string; number: string; revision: number; status: string; activity_date: string; location: string; service_description: string; updated_at: string }
 
 function List() {
-  const [rows, setRows] = useState<Row[] | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  useEffect(() => {
-    api<Row[]>('/aprs').then(setRows).catch((e) => setError(e instanceof ApiError ? e.message : 'Erro ao carregar.'));
-  }, []);
+  const { rows, more, loading, error, loadMore } = usePaged<Row>('/aprs', 'updated_at');
   return (
     <>
       <div className="flex items-center justify-between gap-3">
@@ -36,6 +31,7 @@ function List() {
           </li>
         ))}
       </ul>
+      {more && <Button variant="secondary" disabled={loading} onClick={loadMore}>{loading ? 'Carregando…' : 'Mostrar mais antigas'}</Button>}
     </>
   );
 }

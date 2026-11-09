@@ -9,6 +9,7 @@
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "migrate:deploy": "dotenv -e ../../.env -- ts-node src/migrate-cli.ts",
     "seed": "dotenv -e ../../.env -- ts-node src/seed.ts",
+    "seed:demo": "dotenv -e ../../.env -- ts-node src/seed-demo.ts",
     "test": "jest --runInBand"
   },
   "dependencies": {
