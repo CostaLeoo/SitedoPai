@@ -166,7 +166,7 @@ export class DocumentsService {
     if (f.type.requires_gas_monitoring) {
       const params = f.type.gas_parameters as unknown as GasParameter[];
       p.h2('Monitoramento atmosférico');
-      p.para(`Limites configurados pelo SST: ${params.map((g) => `${g.label} ${[g.min !== undefined ? `≥ ${g.min}` : '', g.max !== undefined ? `≤ ${g.max}` : ''].filter(Boolean).join(' e ')} ${g.unit}`).join('; ')}. Validade de cada medição: ${f.type.gas_max_age_minutes} min.`, { muted: true, size: 8.5 });
+      p.para(`Limites configurados pelo SST: ${params.map((g) => `${g.label} ${[g.min !== undefined ? `mín. ${g.min}` : '', g.max !== undefined ? `máx. ${g.max}` : ''].filter(Boolean).join(' e ')} ${g.unit}`).join('; ')}. Validade de cada medição: ${f.type.gas_max_age_minutes} min.`, { muted: true, size: 8.5 });
       p.table([{ header: 'Data e hora', width: 26 }, { header: 'Parâmetro', width: 18 }, { header: 'Valor', width: 12 }, { header: 'Situação', width: 14 }, { header: 'Instrumento', width: 18 }, { header: 'Medido por', width: 16 }],
         f.measurements.map((m) => [formatDateTime(m.received_at), params.find((g) => g.key === m.parameter_key)?.label ?? m.parameter_key,
           `${Number(m.value).toLocaleString('pt-BR')} ${m.unit}`, m.within_limits ? 'Dentro do limite' : 'FORA DO LIMITE', m.instrument, name(m.measured_by)]));

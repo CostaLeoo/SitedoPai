@@ -80,6 +80,8 @@ describe('emissão de PDF', () => {
     const text = pdfText(file.body as Buffer);
     expect(text).toContain('PT-2026-000001');
     expect(text).toContain('NÃO VALE COMO AUTORIZAÇÃO');
+    // Só caracteres que a fonte embutida tem (antes, ≥ e ≤ saíam como quadrados).
+    expect(text).not.toMatch(/[≥≤]/);
     expect(text).toContain('SITUAÇÃO NA EMISSÃO: EM RASCUNHO');
   });
 
