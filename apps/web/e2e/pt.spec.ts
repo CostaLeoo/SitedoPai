@@ -119,7 +119,7 @@ test('gás fora do limite suspende na hora; a saída continua possível', async 
 test('retomada assinada exige nova medição; depois, o vigia suspende pelo botão', async ({ page }) => {
   await open(page, 'sup', 'Liberação');
   await page.getByRole('button', { name: 'Assinar retomada' }).click();
-  await expect(page.getByText(/Meça Oxigênio de novo/)).toBeVisible();
+  await expect(page.getByText(/Meça Oxigênio de novo/).first()).toBeVisible();
   await measure(page, '20,8');
   await tab(page, 'Liberação');
   await page.getByRole('button', { name: 'Assinar retomada' }).click();

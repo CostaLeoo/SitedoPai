@@ -1,5 +1,7 @@
-# SitedoPai — Plataforma SaaS de APR e Permissão de Trabalho
+# Vigia — Plataforma SaaS de APR e Permissão de Trabalho
 
+
+> Nome da plataforma: **Vigia** (o repositório continua se chamando SitedoPai).
 Plataforma web multiempresa para gestão de Análise Preliminar de Riscos (APR)
 e Permissão de Trabalho (PT), destinada a empresas brasileiras.
 

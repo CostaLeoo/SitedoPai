@@ -36,7 +36,7 @@ export async function accessToken(): Promise<string | null> {
 
 /** Só aceita caminhos internos (evita redirecionamento para fora do site). */
 export function safeReturnPath(p: unknown): string {
-  return typeof p === 'string' && p.startsWith('/') && !p.startsWith('//') ? p : '/aprs';
+  return typeof p === 'string' && p.startsWith('/') && !p.startsWith('//') ? p : '/painel';
 }
 
 /**

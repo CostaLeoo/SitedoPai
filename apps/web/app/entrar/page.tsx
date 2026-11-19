@@ -3,13 +3,15 @@ import { useState } from 'react';
 import { Banner, Button } from '@/components/ui';
 import { auth, DEV_USERS, devLogin, safeReturnPath } from '@/lib/auth';
 import { AUTH_MODE } from '@/lib/config';
+import { BrandLayout } from '@/components/brand-panel';
 
 export default function Entrar() {
   const [error, setError] = useState<string | null>(null);
   return (
-    <main className="mx-auto flex min-h-dvh max-w-screen-sm flex-col justify-center gap-6 p-6">
+    <BrandLayout>
+     <div className="flex flex-col gap-5">
       <div>
-        <h1 className="text-3xl font-bold">SitedoPai</h1>
+        <h1 className="text-2xl font-bold tracking-tight">Entrar</h1>
         <p className="mt-2 text-muted">Análise Preliminar de Riscos e Permissão de Trabalho.</p>
       </div>
       {error && <Banner tone="danger">{error}</Banner>}
@@ -30,6 +32,7 @@ export default function Entrar() {
         Entrar com sua conta
       </Button>}
       {AUTH_MODE !== 'dev' && <p className="text-sm text-muted">Perfis de administração, SST, supervisão e auditoria pedem a verificação em duas etapas.</p>}
-    </main>
+     </div>
+    </BrandLayout>
   );
 }

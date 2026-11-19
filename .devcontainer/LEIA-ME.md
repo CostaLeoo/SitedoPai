@@ -1,4 +1,4 @@
-# SitedoPai — demonstração no Codespaces
+# Vigia — demonstração no Codespaces
 
 Ambiente de **teste**, com dados **fictícios** e **modo demonstração** (matriz,
 modelo e tipo de PT sem validação profissional). Não use em atividade real.

@@ -51,7 +51,7 @@ function Conta() {
               {b.subscription.canceled_at && <><dt className="text-muted">Cancelada em</dt><dd>{date(b.subscription.canceled_at)}</dd></>}
             </dl>
           ) : <p className="mt-2 text-muted">Sem assinatura cadastrada.</p>}
-          <p className="mt-3 text-sm text-muted">O pagamento é feito na página do provedor. Nenhum dado de cartão fica no SitedoPai.</p>
+          <p className="mt-3 text-sm text-muted">O pagamento é feito na página do provedor. Nenhum dado de cartão fica no Vigia.</p>
         </Card>
       )}
       {b && b.invoices.length > 0 && (

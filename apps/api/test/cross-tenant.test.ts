@@ -60,6 +60,7 @@ const CASES: Record<string, Case> = {
     const all = Object.entries(files).map(([k, v]) => k + new TextDecoder().decode(v)).join('\n');
     for (const v of [SECRET, 'Telhado Beta', 'Tanque Beta', 'Trabalhador Beta', B('aprB'), B('ptB'), B('beta'), 'APR-2026-000001-emissao']) expect(all).not.toContain(v);
   },
+  'GET /dashboard': async () => { bodyHasNo((await asSst(http.get('/dashboard')).expect(200)).body, [B('aprB'), B('ptB'), SECRET, 'Telhado Beta', 'Tanque Beta']); },
   'GET /billing': async () => { bodyHasNo((await asA(http.get('/billing')).expect(200)).body, [B('beta'), SECRET]); },
   'POST /aprs/:id/documents': async () => { await asA(http.post(`/aprs/${B('aprB')}/documents`)).expect(404); },
   'POST /work-permits/:id/documents': async () => { await asA(http.post(`/work-permits/${B('ptB')}/documents`)).expect(404); },
